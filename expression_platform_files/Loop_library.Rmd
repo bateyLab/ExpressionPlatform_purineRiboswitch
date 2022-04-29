@@ -1,0 +1,56 @@
+---
+title: "Loop library analysis"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+```
+
+## Reading in the csv
+Read in the csv with all of the (-), (+), and fold induction values
+get rid of all extra columns 
+remove gfpUV (won't want this control for the graph)
+put NA in all of the places where there isn't data 
+create separate charts for each variable 
+```{r}
+loop_library <- read.csv("loop_library_data.csv", header=T)
+loop_library <- subset.data.frame(loop_library, select = -X)
+loop_library <- subset.data.frame(loop_library, select = -gfpUV)
+loop_library[loop_library == -2] <-NA
+loop_repression <- loop_library[loop_library == "(-)",]
+loop_expression <- loop_library[loop_library == "(+)",]
+loop_fold_induction <- loop_library[loop_library == "FI",]
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Statistics Time Baby
+```{r}
+summary(loop_repression)
+summary(loop_expression)
+summary(loop_fold_induction)
+```
+
+##long form baby
+```{r}
+long_loop_library <- gather(loop_library,Colony_Name, Fluorescence, -COLONIES)
+long_loop_repression <- gather(loop_repression,Colony_Name, Fluorescence, -COLONIES)
+long_loop_expression <- gather(loop_expression,Colony_Name, Fluorescence, -COLONIES)
+long_loop_fold_induction <- gather(loop_fold_induction,Colony_Name, Fluorescence, -COLONIES)
+long_loop_rep_and_FI <-rbind(long_loop_repression, long_loop_fold_induction)
+```
+
+
+##Let's make some figures
+```{r}
+ggplot(long_loop_rep_and_FI, aes(x=reorder(Colony_Name,-Fluorescence, na.rm=TRUE), y=Fluorescence, fill=COLONIES))+
+  geom_boxplot()+
+  labs(title="Loop Library Repression and Fold Induction", x="Colony", y="")+
+  scale_y_log10()+
+  theme_classic()
+```
+

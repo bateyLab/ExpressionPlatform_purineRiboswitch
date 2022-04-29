@@ -1,0 +1,200 @@
+---
+title: "loop_stats"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+```
+
+## R Markdown
+
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+ Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #finds the 25th and 75th percentile of the distribution, excluding NAs
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #difference between 75th and 25th quartile=interquartile range
+ upperBound <- Q[2]+bounds*iqr
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be vaired by changing bound
+ lowerBound <- Q[1]-bounds*iqr
+ #upper bound of the values is 25th quartile - 1.5*(interquartile range)
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #take out the values that are outside of the established bounds note: that 1.5 can be vaired by changing bound
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ return(noteliminatedvalues)
+ #return those values which will be included that are between the upper and lower bounds 
+}
+```
+
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
+Put NA in place of -2 (which was how NA was denoted in the csv).
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+##Read in csv and make dataframe for Repression (measurements taken in the absence of ligand)
+```{r}
+loop_library <- read.csv("loop_library_data.csv", header=T)
+loop_library[loop_library == -2] <-NA
+loop_rep1 <- loop_library[loop_library == "(-)",]
+#dataframe of just repression
+loop_rep <- loop_rep1[rowSums(is.na(loop_rep1)) !=ncol(loop_rep1),]
+rm(loop_rep1)
+#remove rows that were only NA and delete dataframe that was filled with NA only columns
+```
+
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for repression
+```{r}
+
+noOut_loop_rep.list <- apply(loop_rep[,2:ncol(loop_rep)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_loop_rep_sideways <- plyr::ldply(noOut_loop_rep.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe
+noOut_loop_rep <- data.frame(t(noOut_loop_rep_sideways[-1]))
+colnames(noOut_loop_rep) <- noOut_loop_rep_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+loop_rep_noOut_wideform <- cbind(loop_rep[,1], noOut_loop_rep[,1:ncol(noOut_loop_rep)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(loop_rep_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+loop_rep_noOut_wideform_noUV <- subset.data.frame(loop_rep_noOut_wideform, select = -gfpUV)
+#remove gfpUV --> this is because gfpUV should have outliers removed but it does not need to be considered in the analysis between and among groups since it is a negative control, keeping it in the dataset will give false significance 
+long_loop_rep <- gather(loop_rep_noOut_wideform_noUV, Colony_Name, Fluorescence, -COLONIES)
+is_NH5 <- vector()
+for(ii in 1:nrow(long_loop_rep)) {
+  if(long_loop_rep[ii,2] == "NH5") {
+    is_NH5[ii] <- 1
+  }
+  else{
+    is_NH5[ii] <- 0
+  }
+}
+long_loop_rep <- cbind(long_loop_rep, is_NH5)
+#make column that identifies colonies as NH5 for plotting
+```
+ 
+##Removing Outliers for Expression (measurements taken in the presence of ligand)
+```{r}
+loop_exp1 <- loop_library[loop_library == "(+)",]
+#dataframe of just expression
+loop_exp <- loop_exp1[rowSums(is.na(loop_exp1)) !=ncol(loop_exp1),]
+rm(loop_exp1)
+#remove rows that were only NA 
+
+```
+ 
+###Using function to remove outliers and create a new dataframe in wide form and long form for expression
+```{r}
+
+noOut_loop_exp.list <- apply(loop_exp[,2:ncol(loop_exp)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_loop_exp_sideways <- plyr::ldply(noOut_loop_exp.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe
+noOut_loop_exp <- data.frame(t(noOut_loop_exp_sideways[-1]))
+colnames(noOut_loop_exp) <- noOut_loop_exp_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+loop_exp_noOut_wideform <- cbind(loop_exp[,1], noOut_loop_exp[,1:ncol(noOut_loop_exp)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(loop_exp_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+loop_exp_noOut_wideform_noUV <- subset.data.frame(loop_exp_noOut_wideform, select = -gfpUV)
+#remove gfpUV --> this is because gfpUV should have outliers removed but it does not need to be considered in the analysis between and among groups since it is a negative control, keeping it in the dataset will give false significance 
+long_loop_exp <- gather(loop_exp_noOut_wideform_noUV, Colony_Name, Fluorescence, -COLONIES)
+is_NH5 <- vector()
+for(ii in 1:nrow(long_loop_exp)) {
+  if(long_loop_exp[ii,2] == "NH5") {
+    is_NH5[ii] <- 1
+  }
+  else{
+    is_NH5[ii] <- 0
+  }
+}
+long_loop_exp <- cbind(long_loop_exp, is_NH5)
+#make column that identifies colonies as NH5 for plotting
+``` 
+
+
+##ANOVA
+###repression 
+```{r, echo=FALSE}
+loop_rep.aov <- aov(Fluorescence ~ Colony_Name, data=long_loop_rep)
+summary(loop_rep.aov)
+colony_comparisons <- TukeyHSD(loop_rep.aov)
+Loop_rep_confidence_interval <- as.data.frame(colony_comparisons[["Colony_Name"]])
+Loop_rep_confidence_interval <- rownames_to_column(Loop_rep_confidence_interval)
+Loop_repvsNH5_confidence_interval <- Loop_rep_confidence_interval[grep("NH5", Loop_rep_confidence_interval[,1]),]
+medianlooprep <- as.data.frame(apply(noOut_loop_rep, 2, median, na.rm=TRUE))
+is_sig <- vector()
+for(ii in 1:nrow(Loop_repvsNH5_confidence_interval)) {
+  if(Loop_repvsNH5_confidence_interval[ii,5] < 0.001) {
+    is_sig[ii] <- 3
+  }
+  else if(Loop_repvsNH5_confidence_interval[ii,5] < 0.01) {
+    is_sig[ii] <- 2
+  }
+  else if(Loop_repvsNH5_confidence_interval[ii,5] < 0.05) {
+    is_sig[ii] <- 1
+  }
+  else{
+    is_sig[ii] <- 0
+  }
+}
+Loop_repvsNH5_confidence_interval <- cbind(Loop_repvsNH5_confidence_interval, is_sig)
+#long_loop_rep <- cbind(long_loop_rep, is_NH5)
+``` 
+###expression
+```{r}
+loop_exp.aov <- aov(Fluorescence ~ Colony_Name, data=long_loop_exp)
+summary(loop_exp.aov)
+colony_comparisons <- TukeyHSD(loop_exp.aov)
+Loop_exp_confidence_interval <- as.data.frame(colony_comparisons[["Colony_Name"]])
+Loop_exp_confidence_interval <- rownames_to_column(Loop_exp_confidence_interval)
+Loop_expvsNH5_confidence_interval <- Loop_exp_confidence_interval[grep("NH5", Loop_exp_confidence_interval[,1]),]
+medianloopexp <- as.data.frame(apply(noOut_loop_exp, 2, median, na.rm=TRUE))
+``` 
+
+###FI
+```{r}
+Fold_induction <- cbind(medianloopexp,medianlooprep)
+colnames(Fold_induction) <- c("Expression", "Repression")
+FIloop <- Fold_induction
+FIloop$FIloop <- Fold_induction$Expression / Fold_induction$Repression
+FIloop <- tibble::rownames_to_column(FIloop, "Colony_Name")
+``` 
+
+##Plots
+```{r, echo=FALSE}
+ggplot(long_loop_exp, aes(x=reorder(Colony_Name,-Fluorescence, na.rm=TRUE), y=Fluorescence, fill=is_NH5))+
+    geom_boxplot(alpha=0.8)+
+   labs(title="Loop Library Expression", x="Colony", y="Fluorescence")+
+   scale_y_log10()+
+    theme_classic()+
+    theme(axis.text.x = element_text(face="bold", angle=90), plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), legend.position = "none")
+
+ggplot(long_loop_rep, aes(x=reorder(Colony_Name,-Fluorescence, na.rm=TRUE), y=Fluorescence, fill=is_NH5))+
+    geom_boxplot(alpha=0.8)+
+   labs(title="Loop Library Repression", x="Colony", y="Fluorescence")+
+   scale_y_log10()+
+    theme_classic()+
+    theme(axis.text.x=element_blank(), plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), axis.title.y = element_text(face = "bold"), legend.position = "none")
+
+ggplot(FIloop, aes(x=reorder(Colony_Name,-FIloop), y=FIloop))+
+    geom_point()+
+   labs(title="Loop Library Fold Induction", x="Colony", y="Fold Induction")+
+ #  scale_y_log10()+
+    theme_classic()+
+    theme(axis.text.x = element_text(face="bold", angle=90), plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), axis.title.y = element_text(face = "bold"), legend.position = "none")
+
+``` 

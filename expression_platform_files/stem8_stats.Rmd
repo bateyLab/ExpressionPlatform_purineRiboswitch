@@ -1,0 +1,214 @@
+---
+title: "stem8_stats"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+```
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+ Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #finds the 25th and 75th percentile of the distribution, excluding NAs
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #difference between 75th and 25th quartile=interquartile range
+ upperBound <- Q[2]+bounds*iqr
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be vaired by changing bound
+ lowerBound <- Q[1]-bounds*iqr
+ #upper bound of the values is 25th quartile - 1.5*(interquartile range)
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #take out the values that are outside of the established bounds note: that 1.5 can be vaired by changing bound
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ return(noteliminatedvalues)
+ #return those values which will be included that are between the upper and lower bounds 
+}
+```
+
+##Removing Outliers for Repression (measurements taken in the absence of ligand)
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
+Put NA in place of -2 (which was how NA was denoted in the csv).
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+```{r}
+stem8_library <- read.csv("stem8_library_data.csv", header=T)
+stem8_library[stem8_library == -2] <-NA
+stem8_rep1 <- stem8_library[stem8_library == "(-)",]
+#dataframe of just repression
+stem8_rep <- stem8_rep1[rowSums(is.na(stem8_rep1)) !=ncol(stem8_rep1),]
+rm(stem8_rep1)
+#remove rows that were only NA and delete dataframe that was filled with NA only columns
+#stem8_rep[,40] <- as.numeric(stem8_rep[,40], na.rm=TRUE)
+#one of the columns was being read in as a character so this fixes that one
+
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for repression
+```{r}
+
+noOut_stem8_rep.list <- apply(stem8_rep[,2:ncol(stem8_rep)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_stem8_rep_sideways <- plyr::ldply(noOut_stem8_rep.list, rbind)
+#THERE ARE TWO EMPTY ROWS HERE X AND X.1 THAT I WANT TO GET RID OF 
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_stem8_rep <- data.frame(t(noOut_stem8_rep_sideways[-1]))
+colnames(noOut_stem8_rep) <- noOut_stem8_rep_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+stem8_rep_noOut_wideform <- cbind(stem8_rep[,1], noOut_stem8_rep[,1:ncol(noOut_stem8_rep)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(stem8_rep_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+stem8_rep_noOut_wideform_noUV <- subset.data.frame(stem8_rep_noOut_wideform, select = -gfpUV)
+#remove gfpUV --> this is because gfpUV should have outliers removed but it does not need to be considered in the analysis between and among groups since it is a negative control, keeping it in the dataset will give false significance 
+long_stem8_rep <- gather(stem8_rep_noOut_wideform_noUV, Colony_Name, Fluorescence, -COLONIES)
+is_NH5_stem8 <- vector()
+# 0=not NH5 4=evolved NH5 8=control NH5
+is_NH5_stem8_evolved <- grep("\\.NH5", long_stem8_rep[,2])
+jj=1
+for(ii in 1:nrow(long_stem8_rep)) {
+  if(long_stem8_rep[ii,2] == "NH5") {
+    is_NH5_stem8[ii] <- 8
+  }
+  else if(ii == is_NH5_stem8_evolved[jj]) {
+    is_NH5_stem8[ii] <- 4
+    jj = jj+1
+    if(jj>27){
+      jj = 1
+    }
+  }
+  else{
+    is_NH5_stem8[ii] <- 0
+  }
+}
+
+long_stem8_rep <- cbind(long_stem8_rep, is_NH5_stem8)
+#make column that identifies colonies as NH5 for plotting
+```
+ 
+##Removing Outliers for Expression (measurements taken in the presence of ligand)
+```{r}
+stem8_exp1 <- stem8_library[stem8_library == "(+)",]
+#dataframe of just expression
+stem8_exp <- stem8_exp1[rowSums(is.na(stem8_exp1)) !=ncol(stem8_exp1),]
+rm(stem8_exp1)
+#remove rows that were only NA 
+stem8_exp[,40] <- as.numeric(stem8_exp[,40], na.rm=TRUE)
+#one of the columns was being read in as a character so this fixes that one
+
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for expression
+```{r}
+
+noOut_stem8_exp.list <- apply(stem8_exp[,2:ncol(stem8_exp)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_stem8_exp_sideways <- plyr::ldply(noOut_stem8_exp.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_stem8_exp <- data.frame(t(noOut_stem8_exp_sideways[-1]))
+colnames(noOut_stem8_exp) <- noOut_stem8_exp_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+stem8_exp_noOut_wideform <- cbind(stem8_exp[1:78,1], noOut_stem8_exp[,1:ncol(noOut_stem8_exp)])
+#replaces id column with COLONY column which identified the value as (-) or (+), did 1:78 because the noOut dataframe is shorter than the dataframe with outliers and the two need to have the same number of rows 
+colnames(stem8_exp_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+stem8_exp_noOut_wideform_noUV <- subset.data.frame(stem8_exp_noOut_wideform, select = -gfpUV)
+#remove gfpUV --> this is because gfpUV should have outliers removed but it does not need to be considered in the analysis between and among groups since it is a negative control, keeping it in the dataset will give false significance 
+long_stem8_exp <- gather(stem8_exp_noOut_wideform_noUV, Colony_Name, Fluorescence, -COLONIES)
+is_NH5_stem8exp <- vector()
+for(ii in 1:nrow(long_stem8_exp)) {
+  if(long_stem8_exp[ii,2] == "NH5") {
+    is_NH5_stem8exp[ii] <- 1
+  }
+  else{
+    is_NH5_stem8exp[ii] <- 0
+  }
+}
+long_stem8_exp <- cbind(long_stem8_exp, is_NH5_stem8exp)
+#make column that identifies colonies as NH5 for plotting
+```
+
+
+##ANOVA
+###repression 
+```{r, echo=FALSE}
+stem8_rep.aov <- aov(Fluorescence ~ Colony_Name, data=long_stem8_rep)
+summary(stem8_rep.aov)
+colony_comparisons <- TukeyHSD(stem8_rep.aov)
+Stem8_rep_confidence_interval <- as.data.frame(colony_comparisons[["Colony_Name"]])
+Stem8_rep_confidence_interval <- rownames_to_column(Stem8_rep_confidence_interval)
+Stem8_repvsNH5_confidence_interval <- Stem8_rep_confidence_interval[grep("NH5", Stem8_rep_confidence_interval[,1]),]
+medianstem8rep <- as.data.frame(apply(noOut_stem8_rep, 2, median, na.rm=TRUE))
+is_sigstem <- vector()
+for(ii in 1:nrow(Stem8_repvsNH5_confidence_interval)) {
+  if(Stem8_repvsNH5_confidence_interval[ii,5] < 0.001) {
+    is_sigstem[ii] <- 3
+  }
+  else if(Stem8_repvsNH5_confidence_interval[ii,5] < 0.01) {
+    is_sigstem[ii] <- 2
+  }
+  else if(Stem8_repvsNH5_confidence_interval[ii,5] < 0.05) {
+    is_sigstem[ii] <- 1
+  }
+  else{
+    is_sigstem[ii] <- 0
+  }
+}
+Stem8_repvsNH5_confidence_interval <- cbind(Stem8_repvsNH5_confidence_interval, is_sigstem)
+
+``` 
+###expression
+```{r, echo=FALSE}
+stem8_exp.aov <- aov(Fluorescence ~ Colony_Name, data=long_stem8_exp)
+summary(stem8_exp.aov)
+colony_comparisons <- TukeyHSD(stem8_exp.aov)
+Stem8_exp_confidence_interval <- as.data.frame(colony_comparisons[["Colony_Name"]])
+Stem8_exp_confidence_interval <- rownames_to_column(Stem8_exp_confidence_interval)
+Stem8_expvsNH5_confidence_interval <- Stem8_exp_confidence_interval[grep("NH5", Stem8_exp_confidence_interval[,1]),]
+medianstem8exp <- as.data.frame(apply(noOut_stem8_exp, 2, median, na.rm=TRUE))
+
+``` 
+###fold induction
+
+```{r}
+Fold_induction_stem8 <- cbind(medianstem8exp,medianstem8rep)
+colnames(Fold_induction_stem8) <- c("Expression", "Repression")
+FI_stem8 <- Fold_induction_stem8
+FI_stem8$FI_stem8 <- Fold_induction_stem8$Expression / Fold_induction_stem8$Repression
+FI_stem8 <- tibble::rownames_to_column(FI_stem8, "Colony_Name")
+``` 
+
+##Plots
+```{r, echo=FALSE}
+ggplot(long_stem8_exp, aes(x=reorder(Colony_Name,-Fluorescence, na.rm=TRUE), y=Fluorescence, fill=is_NH5_stem8exp))+
+    geom_boxplot(alpha=0.8)+
+   labs(title="Hairpin Stem Library Expression", x="Colony", y="Fluorescence")+
+   scale_y_log10()+
+    theme_classic()+
+    theme(axis.text.x = element_text(face="bold", angle=90), plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), legend.position = "none")
+
+ggplot(long_stem8_rep, aes(x=reorder(Colony_Name,-Fluorescence, na.rm=TRUE), y=Fluorescence, fill=is_NH5_stem8))+
+    geom_boxplot(alpha=0.8)+
+   labs(title="Hairpin Stem Library Repression", x="Colony", y="Fluorescence")+
+   scale_y_log10()+
+    theme_classic()+
+    theme(plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), axis.title.y = element_text(face = "bold"), legend.position = "none", axis.text.x=element_blank())
+
+ggplot(FI_stem8, aes(x=reorder(Colony_Name,-FI_stem8), y=FI_stem8))+
+    geom_point()+
+   labs(title="Hairpin Stem Library Fold Induction", x="Colony", y="Fold Induction")+
+ #  scale_y_log10()+
+    theme_classic()+
+    theme(axis.text.x = element_text(face="bold", angle=90), plot.title = element_text(hjust=0.5, face="bold"), axis.text.y = element_text(face="bold"), axis.title.x = element_text(face = "bold"), axis.title.y = element_text(face = "bold"), legend.position = "none")
+
+``` 
