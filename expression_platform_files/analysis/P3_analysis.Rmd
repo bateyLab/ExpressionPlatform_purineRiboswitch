@@ -17,6 +17,7 @@ library(openxlsx)
 ```
 
 ## Creating the function to remove outliers based on Interquartile range
+
 ```{r}
 removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
  Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
@@ -24,11 +25,11 @@ removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
  iqr <- IQR(distribution, na.rm=TRUE)
  #difference between 75th and 25th quartile=interquartile range
  upperBound <- Q[2]+bounds*iqr
- #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be vaired by changing bound
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be varied by changing bound
  lowerBound <- Q[1]-bounds*iqr
  #upper bound of the values is 25th quartile - 1.5*(interquartile range)
  eliminated <- c(distribution < lowerBound | distribution > upperBound)
- #take out the values that are outside of the established bounds note: that 1.5 can be vaired by changing bound
+ #take out the values that are outside of the established bounds note: that 1.5 can be varied by changing bound
  noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
  #index values within the upper and lower bounds
  noteliminatedvalues <- distribution[noteliminatedindex]
@@ -38,12 +39,7 @@ removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
 ```
 
 Read in csv.
-Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
-Put NA in place of -2 (which was how NA was denoted in the csv).
-This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
-Read in csv.
-Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
-Put NA in place of -2 (which was how NA was denoted in the csv).
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence (PBR322) corrected fluorescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when read into R. 
 This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
 ```{r}
 #read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
@@ -55,7 +51,7 @@ NH5_P3all[NH5_P3all == -2] <-NA
 NH5_P3_minus1 <- NH5_P3all[NH5_P3all == "(-)",]
 NH5_P3_minus <- NH5_P3_minus1[rowSums(is.na(NH5_P3_minus1)) !=ncol(NH5_P3_minus1),]
 rm(NH5_P3_minus1)
-#remove rows that were only NA and delete dataframe that was filled with NA only columns
+#remove rows that were only NA and delete df that was filled with NA only columns
 #PLUS 2AP DF
 NH5_P3_plus1 <- NH5_P3all[NH5_P3all == "(+)",]
 NH5_P3_plus <- NH5_P3_plus1[rowSums(is.na(NH5_P3_plus1)) !=ncol(NH5_P3_plus1),]
