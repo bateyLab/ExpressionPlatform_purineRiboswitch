@@ -1,0 +1,140 @@
+---
+title: "anchor_analysis"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+library(ggsignif)
+library(plotrix)
+library(openxlsx)
+```
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+ Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #finds the 25th and 75th percentile of the distribution, excluding NAs
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #difference between 75th and 25th quartile=interquartile range
+ upperBound <- Q[2]+bounds*iqr
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be vaired by changing bound
+ lowerBound <- Q[1]-bounds*iqr
+ #upper bound of the values is 25th quartile - 1.5*(interquartile range)
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #take out the values that are outside of the established bounds note: that 1.5 can be vaired by changing bound
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ return(noteliminatedvalues)
+ #return those values which will be included that are between the upper and lower bounds 
+}
+```
+
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
+Put NA in place of -2 (which was how NA was denoted in the csv).
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+```{r}
+#read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
+NH5_anchorall <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/anchor_library_data.csv", header=T)
+empty_columns <- sapply(NH5_anchorall, function(x) all(is.na(x) | x==""))
+NH5_anchorall <- NH5_anchorall[,!empty_columns]
+NH5_anchorall[NH5_anchorall == -2] <-NA
+#MINUS 2AP DF
+NH5_anchor_minus1 <- NH5_anchorall[NH5_anchorall == "(-)",]
+NH5_anchor_minus <- NH5_anchor_minus1[rowSums(is.na(NH5_anchor_minus1)) !=ncol(NH5_anchor_minus1),]
+rm(NH5_anchor_minus1)
+#remove rows that were only NA and delete dataframe that was filled with NA only columns
+#PLUS 2AP DF
+NH5_anchor_plus1 <- NH5_anchorall[NH5_anchorall == "(+)",]
+NH5_anchor_plus <- NH5_anchor_plus1[rowSums(is.na(NH5_anchor_plus1)) !=ncol(NH5_anchor_plus1),]
+rm(NH5_anchor_plus1)
+#remove rows that were only NA 
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for minus
+```{r}
+noOut_NH5_anchor_minus.list <- apply(NH5_anchor_minus[,2:ncol(NH5_anchor_minus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_NH5_anchor_minus_sideways <- plyr::ldply(noOut_NH5_anchor_minus.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_NH5_anchor_minus <- data.frame(t(noOut_NH5_anchor_minus_sideways[-1]))
+colnames(noOut_NH5_anchor_minus) <- noOut_NH5_anchor_minus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+NH5_anchor_minus_noOut_wideform <- cbind(NH5_anchor_minus[1:nrow(noOut_NH5_anchor_minus),1], noOut_NH5_anchor_minus[,1:ncol(noOut_NH5_anchor_minus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(NH5_anchor_minus_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+long_NH5_anchor_minus <- gather(NH5_anchor_minus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for plus
+```{r}
+
+noOut_NH5_anchor_plus.list <- apply(NH5_anchor_plus[,2:ncol(NH5_anchor_plus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_NH5_anchor_plus_sideways <- plyr::ldply(noOut_NH5_anchor_plus.list, rbind)
+#THERE ARE TWO EMPTY ROWS HERE X AND X.1 THAT I WANT TO GET RID OF 
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_NH5_anchor_plus <- data.frame(t(noOut_NH5_anchor_plus_sideways[-1]))
+colnames(noOut_NH5_anchor_plus) <- noOut_NH5_anchor_plus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+NH5_anchor_plus_noOut_wideform <- cbind(NH5_anchor_plus[1:nrow(noOut_NH5_anchor_plus),1], noOut_NH5_anchor_plus[,1:ncol(noOut_NH5_anchor_plus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(NH5_anchor_plus_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+long_NH5_anchor_plus <- gather(NH5_anchor_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+
+##Make DF of medians of each after removal of outliers 
+```{r}
+#median DFs
+#mediananchor_FI<- as.data.frame(apply(noOut_NH5_anchor_FI, 2, median, na.rm=TRUE))
+mediananchor_minus<- as.data.frame(apply(noOut_NH5_anchor_minus, 2, median, na.rm=TRUE))
+mediananchor_plus<- as.data.frame(apply(noOut_NH5_anchor_plus, 2, median, na.rm=TRUE))
+#standard error DFs for minus and plus
+SE_anchor_minus <- std.error(noOut_NH5_anchor_minus)
+SE_anchor_plus <- std.error(noOut_NH5_anchor_plus)
+#create one data frame that has medians and standard errors
+anchor_all_summary_table <- cbind.data.frame(mediananchor_minus, SE_anchor_minus, mediananchor_plus, SE_anchor_plus)
+
+#rename column names
+colnames(anchor_all_summary_table) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE")
+#make FI
+anchor_all_summary_table$FI <- anchor_all_summary_table$`+2AP` / anchor_all_summary_table$`-2AP`
+#divide values by NH5
+anchor_all_summary_table$corr_minus_2AP <- as.numeric(anchor_all_summary_table$'-2AP')/anchor_all_summary_table[c("NH5"),c("-2AP")]
+anchor_all_summary_table$corr_plus_2AP <- as.numeric(anchor_all_summary_table$'+2AP')/anchor_all_summary_table[c("NH5"),c("+2AP")]
+anchor_all_summary_table$corr_FI <- as.numeric(anchor_all_summary_table$FI)/anchor_all_summary_table[c("NH5"),c("FI")]
+
+#the measurements should have 2 sig figs and the standards errors should have 1 sig fig
+two_sf_cols <- c(1,3,5,6,7,8)
+one_sf_cols <- c(2,4)
+anchor_all_summary_table[,two_sf_cols] <- signif(anchor_all_summary_table[,two_sf_cols],2)
+anchor_all_summary_table[,one_sf_cols] <- signif(anchor_all_summary_table[,one_sf_cols],1)
+
+#write csv
+write.csv(anchor_all_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_all_summary_table.csv", row.names = TRUE)
+
+#remove the switches below the functional cutoff of 2.0
+#find the FI median
+anchor_summary_table <- subset(anchor_all_summary_table, FI>1.9)
+#write csv
+write.csv(anchor_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_summary_table.csv", row.names = TRUE)
+#write excel
+write.xlsx(anchor_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_summary_table.xlsx', rowNames = TRUE)
+write.xlsx(anchor_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_all_summary_table.xlsx', rowNames = TRUE)
+
+ggplot(anchor_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Anchor Library Repression vs Activity", x="Repression", y="Fold Induction")+
+  theme_minimal()
+```

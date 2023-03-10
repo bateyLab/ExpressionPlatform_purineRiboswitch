@@ -1,0 +1,78 @@
+---
+title: "anchor_exchange_sequence"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+library(ggsignif)
+library(plotrix)
+library(openxlsx)
+```
+
+```{r}
+basepairing <- function(base1,base2){
+  pairing <- 0
+  if(base1=="A"){
+    if(base2=="U"){
+      pairing <-1
+    }
+  }
+  if(base1=="G"){
+    if(base2=="U" | base2=="C"){
+      pairing <-1
+    }
+  }
+  if(base1=="U"){
+    if(base2=="A" | base2=="G"){
+      pairing <-1
+    }
+  }
+  if(base1=="C"){
+    if(base2=="G"){
+      pairing <-1
+    }
+  }
+ return(pairing)   
+ }   
+ 
+```
+
+```{r}
+AE_summ_seq <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table_seq.csv")
+SEQ_AE <- AE_summ_seq[,c("X","P1.1","P1P4.1", "P4.2", "P4.3", "P4.4" )]
+SEQ_AE1 <- AE_summ_seq[,c("X","P1.1","P1P4.1", "P4.2", "P4.3", "P4.4" )]
+
+```
+
+```{r}
+SEQ_AE <- SEQ_AE%>% 
+  mutate(P1pair = mapply(basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pairing = mapply(basepairing,SEQ_AE[,3],SEQ_AE[,6]) + mapply(basepairing,SEQ_AE[,4], SEQ_AE[,5]))
+
+SEQ_AE1 <- SEQ_AE1%>% 
+  mutate(P1pair = mapply(basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pair1 = mapply(basepairing,SEQ_AE[,3],SEQ_AE[,6]), P4_pair2= mapply(basepairing,SEQ_AE[,4], SEQ_AE[,5]))
+
+```
+
+```{r}
+##P4 color plot based on having 0, 1, or 2 bp in P4
+ggplot(sillygraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
+  geom_point(size=3, alpha=0.75, aes(color=`P4_pairing`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+```
+
+
+
+
+
+ 

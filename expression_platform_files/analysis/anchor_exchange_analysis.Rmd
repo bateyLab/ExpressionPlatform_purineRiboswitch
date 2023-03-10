@@ -1,0 +1,375 @@
+---
+title: "anchor_exchange_analysis"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+library(ggsignif)
+library(plotrix)
+library(openxlsx)
+library(viridis)
+```
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+ Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #finds the 25th and 75th percentile of the distribution, excluding NAs
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #difference between 75th and 25th quartile=interquartile range
+ upperBound <- Q[2]+bounds*iqr
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be vaired by changing bound
+ lowerBound <- Q[1]-bounds*iqr
+ #upper bound of the values is 25th quartile - 1.5*(interquartile range)
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #take out the values that are outside of the established bounds note: that 1.5 can be vaired by changing bound
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ return(noteliminatedvalues)
+ #return those values which will be included that are between the upper and lower bounds 
+}
+```
+
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence corrected flourescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when inputted into R. 
+Put NA in place of -2 (which was how NA was denoted in the csv).
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+```{r}
+#read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
+  NH5_AEall <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/AE_DATA.csv", header=T)
+empty_columns <- sapply(NH5_AEall, function(x) all(is.na(x) | x==""))
+NH5_AEall <- NH5_AEall[,!empty_columns]
+NH5_AEall[NH5_AEall == -2] <-NA
+#MINUS 2AP DF
+NH5_AE_minus1 <- NH5_AEall[NH5_AEall == "(-)",]
+NH5_AE_minus <- NH5_AE_minus1[rowSums(is.na(NH5_AE_minus1)) !=ncol(NH5_AE_minus1),]
+rm(NH5_AE_minus1)
+#remove rows that were only NA and delete dataframe that was filled with NA only columns
+#PLUS 2AP DF
+NH5_AE_plus1 <- NH5_AEall[NH5_AEall == "(+)",]
+NH5_AE_plus <- NH5_AE_plus1[rowSums(is.na(NH5_AE_plus1)) !=ncol(NH5_AE_plus1),]
+rm(NH5_AE_plus1)
+#remove rows that were only NA 
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for minus
+```{r}
+noOut_NH5_AE_minus.list <- apply(NH5_AE_minus[,2:ncol(NH5_AE_minus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_NH5_AE_minus_sideways <- plyr::ldply(noOut_NH5_AE_minus.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_NH5_AE_minus <- data.frame(t(noOut_NH5_AE_minus_sideways[-1]))
+colnames(noOut_NH5_AE_minus) <- noOut_NH5_AE_minus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+NH5_AE_minus_noOut_wideform <- cbind(NH5_AE_minus[1:nrow(noOut_NH5_AE_minus),1], noOut_NH5_AE_minus[,1:ncol(noOut_NH5_AE_minus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(NH5_AE_minus_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+long_NH5_AE_minus <- gather(NH5_AE_minus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for plus
+```{r}
+
+noOut_NH5_AE_plus.list <- apply(NH5_AE_plus[,2:ncol(NH5_AE_plus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_NH5_AE_plus_sideways <- plyr::ldply(noOut_NH5_AE_plus.list, rbind)
+#THERE ARE TWO EMPTY ROWS HERE X AND X.1 THAT I WANT TO GET RID OF 
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_NH5_AE_plus <- data.frame(t(noOut_NH5_AE_plus_sideways[-1]))
+colnames(noOut_NH5_AE_plus) <- noOut_NH5_AE_plus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+NH5_AE_plus_noOut_wideform <- cbind(NH5_AE_plus[1:nrow(noOut_NH5_AE_plus),1], noOut_NH5_AE_plus[,1:ncol(noOut_NH5_AE_plus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(NH5_AE_plus_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+long_NH5_AE_plus <- gather(NH5_AE_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+
+##Make DF of medians of each after removal of outliers 
+```{r}
+#median DFs
+#medianAE_FI<- as.data.frame(apply(noOut_NH5_AE_FI, 2, median, na.rm=TRUE))
+medianAE_minus<- as.data.frame(apply(noOut_NH5_AE_minus, 2, median, na.rm=TRUE))
+medianAE_plus<- as.data.frame(apply(noOut_NH5_AE_plus, 2, median, na.rm=TRUE))
+#standard error DFs for minus and plus
+SE_AE_minus <- std.error(noOut_NH5_AE_minus)
+SE_AE_plus <- std.error(noOut_NH5_AE_plus)
+#create one data frame that has medians and standard errors
+AE_all_summary_table <- cbind.data.frame(medianAE_minus, SE_AE_minus, medianAE_plus, SE_AE_plus)
+
+#rename column names
+colnames(AE_all_summary_table) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE")
+#make FI
+AE_all_summary_table$FI <- AE_all_summary_table$`+2AP` / AE_all_summary_table$`-2AP`
+#divide values by NH5
+AE_all_summary_table$corr_minus_2AP <- as.numeric(AE_all_summary_table$'-2AP')/AE_all_summary_table[c("NH5"),c("-2AP")]
+AE_all_summary_table$corr_plus_2AP <- as.numeric(AE_all_summary_table$'+2AP')/AE_all_summary_table[c("NH5"),c("+2AP")]
+AE_all_summary_table$corr_FI <- as.numeric(AE_all_summary_table$FI)/AE_all_summary_table[c("NH5"),c("FI")]
+
+#the measurements should have 2 sig figs and the standards errors should have 1 sig fig
+two_sf_cols <- c(1,3,5,6,7,8)
+one_sf_cols <- c(2,4)
+AE_all_summary_table[,two_sf_cols] <- signif(AE_all_summary_table[,two_sf_cols],2)
+AE_all_summary_table[,one_sf_cols] <- signif(AE_all_summary_table[,one_sf_cols],1)
+
+#write csv
+write.csv(AE_all_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table.csv", row.names = TRUE)
+
+#remove the switches below the functional cutoff of 2.0
+#find the FI median
+AE_summary_table <- subset(AE_all_summary_table, FI>1.9)
+#write csv
+write.csv(AE_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_summary_table.csv", row.names = TRUE)
+#write excel
+write.xlsx(AE_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_summary_table.xlsx', rowNames = TRUE)
+write.xlsx(AE_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table.xlsx', rowNames = TRUE)
+
+ggplot(AE_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Anchor exchange Library Repression vs Activity", x="Repression", y="Fold Induction")+
+  theme_minimal()
+```
+
+#function to read basepairing from df
+```{r}
+basepairing <- function(base1,base2){
+  pairing <- 0
+  if(base1=="A"){
+    if(base2=="U"){
+      pairing <-1
+    }
+  }
+  if(base1=="G"){
+    if(base2=="U" | base2=="C"){
+      pairing <-1
+    }
+  }
+  if(base1=="U"){
+    if(base2=="A" | base2=="G"){
+      pairing <-1
+    }
+  }
+  if(base1=="C"){
+    if(base2=="G"){
+      pairing <-1
+    }
+  }
+ return(pairing)   
+}   
+
+weighted.basepairing <- function(base1,base2){
+  pairing <- 0
+  if(base1=="A"){
+    if(base2=="U"){
+      pairing <-1
+    }
+  }
+  if(base1=="G"){
+    if(base2=="U" ){
+      pairing <-1
+     } else if(base2=="C"){
+        pairing <-2
+    }
+  }
+  if(base1=="U"){
+    if(base2=="A" | base2=="G"){
+      pairing <-1
+    }
+  }
+  if(base1=="C"){
+    if(base2=="G"){
+      pairing <-2
+    }
+  }
+ return(pairing)   
+ }  
+ 
+```
+#read in df with seq
+```{r}
+AE_summ_seq <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table_seq.csv")
+SEQ_AE <- AE_summ_seq[,c("X","P1.1","P1P4.1", "P4.2", "P4.3", "P4.4" )]
+SEQ_AE <- filter(SEQ_AE,X!="GFPUV")
+AE_all_summary_table <- filter(AE_all_summary_table, row.names(AE_all_summary_table)!="GFPUV")
+SEQ_AE2 <- SEQ_AE
+SEQ_AE1 <- SEQ_AE
+
+```
+#add score for number of bps in P1 and P4
+```{r}
+#df for score for P4 and score for P1
+SEQ_AE <- SEQ_AE%>% 
+  mutate(P1pair = mapply(basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pairing = mapply(basepairing,SEQ_AE[,3],SEQ_AE[,6]) + mapply(basepairing,SEQ_AE[,4], SEQ_AE[,5]))
+AE_all_summary_table <- rownames_to_column(AE_all_summary_table)
+colnames(SEQ_AE)[1] <- c("rowname")
+colnames(SEQ_AE1)[1] <- c("rowname")
+colnames(SEQ_AE2)[1] <- c("rowname")
+#df that has each bp separated, P1, P4-1 which is the bp distal to L4, and P4-2 which is proximal to L4
+SEQ_AE1 <- SEQ_AE1%>% 
+  mutate(P1pair = mapply(basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pair1 = mapply(basepairing,SEQ_AE[,3],SEQ_AE[,6]), P4_pair2 = mapply(basepairing,SEQ_AE[,4], SEQ_AE[,5]))
+AE_all_summary_table <- rownames_to_column(AE_all_summary_table)
+colnames(SEQ_AE)[1] <- c("rowname")
+#df that has GC as 2 and AU/GU as 1 and all others as 0
+SEQ_AE2 <- SEQ_AE2%>% 
+  mutate(P1pair = mapply(weighted.basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pairing = mapply(weighted.basepairing,SEQ_AE[,3],SEQ_AE[,6]) + mapply(weighted.basepairing,SEQ_AE[,4], SEQ_AE[,5]))
+```
+##Plots
+```{r}
+#plain plot that has NH5 as another color 
+is_NH5 <- rep(0,nrow(AE_all_summary_table))
+is_NH5[1] <- 1
+basicgraph <- cbind(AE_all_summary_table, as.factor(is_NH5))
+ggplot(AE_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=is_NH5)) + geom_point(alpha=3,show.legend = FALSE)+
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  theme_minimal()
+#graph based on whether there are 0,1, or 2 pairs in P4, shape based on whether or not there is a P1 extending pair
+P4pairinggraph <- left_join(AE_all_summary_table,SEQ_AE,by="rowname")
+P4pairinggraph$P4_pairing <- as.factor(P4pairinggraph$P4_pairing)
+P4pairinggraph$P1pair <- as.factor(P4pairinggraph$P1pair)
+ggplot(P4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
+  geom_point(size=3, alpha=1, aes(color=`P4_pairing`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+#graphsbased on which P4 bp is present 
+#is distal P4 bp present??
+whichP4pairinggraph <- left_join(AE_all_summary_table,SEQ_AE1,by="rowname")
+whichP4pairinggraph$P4_pair1 <- as.factor(whichP4pairinggraph$P4_pair1)
+whichP4pairinggraph$P4_pair2 <- as.factor(whichP4pairinggraph$P4_pair2)
+whichP4pairinggraph$P1pair <- as.factor(whichP4pairinggraph$P1pair)
+ggplot(whichP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1, aes(color=`P4_pair1`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+#is proximal P4 bp present??
+ggplot(whichP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1, aes(color=`P4_pair2`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+#does strength of bping in P4 matter??
+strengthP4pairinggraph <- left_join(AE_all_summary_table,SEQ_AE2,by="rowname")
+strengthP4pairinggraph$P1pair<- as.factor(strengthP4pairinggraph$P1pair)
+strengthP4pairinggraph$P4_pairing <- as.factor(strengthP4pairinggraph$P4_pairing)
+ggplot(strengthP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=0.8, aes(color=`P4_pairing`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(5,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+
+P4pairinggraph <- left_join(AE_all_summary_table,SEQ_AE,by="rowname")
+P4pairinggraph$P4_pairing <- as.factor(P4pairinggraph$P4_pairing)
+P4pairinggraph$P1pair <- as.factor(P4pairinggraph$P1pair)
+ggplot(P4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
+  geom_point(size=3, alpha=1, aes(color=`P1pair`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+
+#Does it matter which bp is formed in P4?? Made column to color graph for which P4 bp is formed, those that form 0 bps or 2 bps are treated equal in this to isolate single bps, distal is the pair distal to L4, proximal is P4 pair proximal to L4
+whichP4pairinggraph <- whichP4pairinggraph%>% 
+  mutate(whichP4 = ifelse(P4_pair1==1 & P4_pair2==0,"distal_P4",ifelse(P4_pair1==0 & P4_pair2==1,"proximal_P4","not_1_bp")))
+whichP4pairinggraph$whichP4 <- as.factor(whichP4pairinggraph$whichP4)
+ggplot(whichP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1, aes(color=`whichP4`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  #scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()+
+  #scale_color_manual(values= c("#78B7C5", "#EBCC2A", "#F21A00"))
+  #scale_color_manual(values= c("#3B9AB2", "#EBCC2A", "#F21A00"))
+  scale_color_manual(values= c( "#F21A00","dark gray", "#3B9AB2"))
+  #theme(legend.position='none'))
+#separate plots based on the base identity of P1
+ggplot(filter(whichP4pairinggraph, P1.1 == "A"), aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1) +
+  labs(title="Anchor Exchange Fold Induction vs Repression When P1=A", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  #scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()+
+  xlim(0,20)+
+  ylim(0,2)+
+  #scale_color_manual(values= c("#78B7C5", "#EBCC2A", "#F21A00"))
+  #scale_color_manual(values= c("#3B9AB2", "#EBCC2A", "#F21A00"))
+  scale_color_manual(values= c( "#F21A00","dark gray", "#3B9AB2"))
+  #theme(legend.position='none'))
+ggplot(filter(whichP4pairinggraph, P1.1 == "C"), aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1) +
+  labs(title="Anchor Exchange Fold Induction vs Repression When P1=C", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  #scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()+
+  #scale_color_manual(values= c("#78B7C5", "#EBCC2A", "#F21A00"))
+  #scale_color_manual(values= c("#3B9AB2", "#EBCC2A", "#F21A00"))
+  scale_color_manual(values= c( "#F21A00","dark gray", "#3B9AB2"))
+  #theme(legend.position='none'))
+ggplot(filter(whichP4pairinggraph, P1.1 == "G"), aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1) +
+  labs(title="Anchor Exchange Fold Induction vs Repression When P1=G", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  #scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()+
+  #scale_color_manual(values= c("#78B7C5", "#EBCC2A", "#F21A00"))
+  #scale_color_manual(values= c("#3B9AB2", "#EBCC2A", "#F21A00"))
+  scale_color_manual(values= c( "#F21A00","dark gray", "#3B9AB2"))
+  #theme(legend.position='none'))
+ggplot(filter(whichP4pairinggraph, P1.1 == "U"), aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1) +
+  labs(title="Anchor Exchange Fold Induction vs Repression When P1=U", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  #scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()+
+  #scale_color_manual(values= c("#78B7C5", "#EBCC2A", "#F21A00"))
+  #scale_color_manual(values= c("#3B9AB2", "#EBCC2A", "#F21A00"))
+  scale_color_manual(values= c( "#F21A00","dark gray", "#3B9AB2"))
+  #theme(legend.position='none'))
+#all 4 at once
+ggplot(whichP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) + 
+  geom_point(size=3, alpha=1,color="blue") +
+  labs(title="Anchor Exchange Fold Induction vs Repression As P1 varies", x="Repression", y="Fold Induction")+
+  theme_minimal()+
+  facet_wrap(vars(P1.1))
+```
+
+```{r}
+
+##P1 color plot
+ggplot(sillygraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
+  geom_point(size=3, alpha=0.75, aes(color=`P1pair`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+
+##P4 color plot
+ggplot(sillygraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
+  geom_point(size=3, alpha=0.75, aes(color=`P4_pairing`)) +
+  labs(title="Anchor Exchange Fold Induction vs Repression", x="Repression", y="Fold Induction")+
+  #scale_color_brewer(palette = "Paired",trans="reverse")+
+  scale_color_manual(values=rev(brewer.pal(3,"Paired")))+
+  theme_minimal()
+  #theme(legend.position='none'))
+```
+

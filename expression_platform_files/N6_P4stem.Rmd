@@ -1,6 +1,8 @@
 ---
 title: "N6_P4stem"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -42,7 +44,7 @@ Put NA in place of -2 (which was how NA was denoted in the csv).
 This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
 ```{r}
 #read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
-N6_P4stemall <- read.csv("N6_P4stem_data.csv", header=T)
+N6_P4stemall <- read.csv("N6_P4stem_data_2.csv", header=T)
 empty_columns <- sapply(N6_P4stemall, function(x) all(is.na(x) | x==""))
 N6_P4stemall <- N6_P4stemall[,!empty_columns]
 N6_P4stemall[N6_P4stemall == -2] <-NA
@@ -74,6 +76,9 @@ rm(N6_P4stem_FI1)
 
 ###Using function to remove outliers and create a new dataframe in wide form and long form for minus
 ```{r}
+#for if columns are characters instead of num
+#N6_P4stem_minus$NH5 <- as.numeric(N6_P4stem_minus$NH5)
+#N6_P4stem_minus$GFPUV <- as.numeric(N6_P4stem_minus$GFPUV)
 
 noOut_N6_P4stem_minus.list <- apply(N6_P4stem_minus[,2:ncol(N6_P4stem_minus)], 2, removeOut, na.rm=TRUE)
 #this used the function made to identify and remove outliers 
@@ -91,7 +96,9 @@ long_N6_P4stem_minus <- gather(N6_P4stem_minus_noOut_wideform, Colony_Name, Fluo
 
 ###Using function to remove outliers and create a new dataframe in wide form and long form for plus
 ```{r}
-
+#for if columns are characters instead of num
+#N6_P4stem_plus$NH5 <- as.numeric(N6_P4stem_plus$NH5)
+#N6_P4stem_plus$GFPUV <- as.numeric(N6_P4stem_plus$GFPUV)
 noOut_N6_P4stem_plus.list <- apply(N6_P4stem_plus[,2:ncol(N6_P4stem_plus)], 2, removeOut, na.rm=TRUE)
 #this used the function made to identify and remove outliers 
 noOut_N6_P4stem_plus_sideways <- plyr::ldply(noOut_N6_P4stem_plus.list, rbind)
@@ -109,7 +116,8 @@ long_N6_P4stem_plus <- gather(N6_P4stem_plus_noOut_wideform, Colony_Name, Fluore
 
 ###Using function to remove outliers and create a new dataframe in wide form and long form for FI
 ```{r}
-
+N6_P4stem_FI$NH5 <- as.numeric(N6_P4stem_FI$NH5)
+N6_P4stem_FI$GFPUV <- as.numeric(N6_P4stem_FI$GFPUV)
 noOut_N6_P4stem_FI.list <- apply(N6_P4stem_FI[,2:ncol(N6_P4stem_FI)], 2, removeOut, na.rm=TRUE)
 #this used the function made to identify and remove outliers 
 noOut_N6_P4stem_FI_sideways <- plyr::ldply(noOut_N6_P4stem_FI.list, rbind)
@@ -143,7 +151,7 @@ even_cols <- c(2,4)
 N6_P4stem_all_summary_table[,odd_cols] <- signif(N6_P4stem_all_summary_table[,odd_cols],2)
 N6_P4stem_all_summary_table[,even_cols] <- signif(N6_P4stem_all_summary_table[,even_cols],1)
 #rename column names
-colnames(N6_P4stem_all_summary_table) <- c("+2AP", "+2AP_SE","-2AP", "-2AP_SE", "FI")
+colnames(N6_P4stem_all_summary_table) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI")
 #write csv
 write.csv(N6_P4stem_all_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/N6_P4stem_all_summary_file.csv", row.names = TRUE)
 
@@ -157,4 +165,29 @@ write.xlsx(N6_P4stem_summary_table, '~/Downloads/Expression_platform_project/exp
 write.xlsx(N6_P4stem_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/N6_P4stem_all_summary_file.xlsx', rowNames = TRUE)
 ```
 
+##Plots
+```{r}
+N6_P4FORGRAPH <- read.csv("AA_N6_P4stem_all_summary_file_mod.csv", header=T)
+silly1 <- rep(0,nrow(N6_P4FORGRAPH))
+silly1[1] <- 1
+silly1graph <- cbind(N6_P4FORGRAPH, as.factor(silly1))
+ggplot(N6_P4FORGRAPH, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=silly1)) + geom_point()+
+  labs(title="Nucleator Library Repression vs Activity (n=6)", x="Repression", y="Fold Induction")+
+  theme(legend.position='none')
 
+N6_P4FORGRAPH2 <- read.csv("AA_N6_P4stem_all_summary_file_mod_noneg.csv", header=T)
+silly1 <- rep(0,nrow(N6_P4FORGRAPH2))
+silly1[1] <- 1
+silly1graph <- cbind(N6_P4FORGRAPH2, as.factor(silly1))
+ggplot(N6_P4FORGRAPH2, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=silly1)) + geom_point()+
+  labs(title="Nucleator Library Repression vs Activity (n=6)", x="Repression", y="Fold Induction")+
+  theme(legend.position='none')
+
+N6_P4FORGRAPH3 <- read.csv("AA_N6_P4stem_all_summary_file_mod_noneg_over2.csv", header=T)
+silly3 <- rep(0,nrow(N6_P4FORGRAPH3))
+silly3[3] <- 1
+silly1graph <- cbind(N6_P4FORGRAPH3, as.factor(silly3))
+ggplot(N6_P4FORGRAPH3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=silly3)) + geom_point()+
+  labs(title="Nucleator Library Repression vs Activity (n=6)", x="Repression", y="Fold Induction")+
+  theme(legend.position='none')
+```
