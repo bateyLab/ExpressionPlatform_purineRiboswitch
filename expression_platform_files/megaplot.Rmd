@@ -18,125 +18,118 @@ library(plotrix)
 library(openxlsx)
 ```
 
-#trying this out
+#Read in the data for each library, make individual plot for each library 
+#Gateway
 ```{r}
 #read in dfs that I know have the data I need 
-GATE_try <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Gateway/GATE_all_summary_table_seq.csv")
-GATE_try <- filter(GATE_try,X!="gfpUV")
-colnames(GATE_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI", "P1","P2","P3","P4","P5","P6","FULL SEQ")
-GATE_seq_try <- GATE_try[,c("colony","P1","P2","P3","P4","P5","P6","FULL SEQ" )]
+GATE <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Gateway/GATE_all_summary_table_seq.csv")
+GATE <- filter(GATE,X!="gfpUV")
+colnames(GATE) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI", "P1","P2","P3","P4","P5","P6","FULL SEQ")
+GATE_seq_try <- GATE[,c("colony","P1","P2","P3","P4","P5","P6","FULL SEQ" )]
 
-ggplot(GATE_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(GATE, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="Gateway Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#Anchor Exchange
 ```{r}
-AE_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table_seq.csv")
-AE_try <- filter(AE_try,X!="GFPUV")
-colnames(AE_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI", "P1.1","P1P4.1","P4.2","P4.3","P4.4","FULL SEQ")
-AE_seq_try <- AE_try[,c("colony","P1.1","P1P4.1","P4.2","P4.3","P4.4","FULL SEQ" )]
+AE <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table_seq.csv")
+AE <- filter(AE,X!="GFPUV")
+colnames(AE) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI", "P1.1","P1P4.1","P4.2","P4.3","P4.4","FULL SEQ")
+AE_seq <- AE[,c("colony","P1.1","P1P4.1","P4.2","P4.3","P4.4","FULL SEQ" )]
 
-ggplot(AE_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(AE, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="Anchor Exchange Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#Loop
 ```{r}
-loop_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Loop/loop_all_summary_table.csv")
-loop_try <- filter(loop_try,X!="gfpUV")
-colnames(loop_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+loop <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Loop/loop_all_summary_table.csv")
+loop <- filter(loop,X!="gfpUV")
+colnames(loop) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(loop_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(loop, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="Loop Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#Anchor
 ```{r}
-anchor_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor/anchor_all_summary_table.csv")
-anchor_try <- filter(anchor_try,X!="gfpUV")
-colnames(anchor_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+anchor <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor/anchor_all_summary_table.csv")
+anchor <- filter(anchor,X!="gfpUV")
+colnames(anchor) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(anchor_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(anchor, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="Anchor Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#N=6 P4 stem
 ```{r}
-n6p4stem_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/NONEGn6p4stem_all_summary_table.csv")
-n6p4stem_try <- filter(n6p4stem_try,X!="GFPUV")
-colnames(n6p4stem_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+n6p4stem <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/NONEGn6p4stem_all_summary_table.csv")
+n6p4stem <- filter(n6p4stem,X!="GFPUV")
+colnames(n6p4stem) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(n6p4stem_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(n6p4stem, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="N=6 P4 Stem Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#N=8 P4 stem
 ```{r}
-n8p4stem_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n8_P4stem/n8p4stem_all_summary_table.csv")
-n8p4stem_try <- filter(n8p4stem_try,X!="gfpUV")
-colnames(n8p4stem_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+n8p4stem <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n8_P4stem/n8p4stem_all_summary_table.csv")
+n8p4stem <- filter(n8p4stem,X!="gfpUV")
+colnames(n8p4stem) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(n8p4stem_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(n8p4stem, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="N=8 P4 Stem Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#P3
 ```{r}
-P3_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_all_summary_table.csv")
-P3_try <- filter(P3_try,X!="GFPUV")
-colnames(P3_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+P3 <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_all_summary_table.csv")
+P3 <- filter(P3,X!="GFPUV")
+colnames(P3) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(P3_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(P3, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="P3 Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
-ggplot(P3_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
+ggplot(P3, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=3, alpha=1, show.legend = FALSE)+
   labs(title="P3 Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
-
+#P1 exchange
 ```{r}
-P1exchange_try <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1exchange/P1exchange_all_summary_table.csv")
-P3_try <- filter(P3_try,X!="gfpUV")
-colnames(P1exchange_try) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
+P1exchange <-read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1exchange/P1exchange_all_summary_table.csv")
+P1exchange <- filter(P1exchange,X!="gfpUV")
+colnames(P1exchange) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
-ggplot(P1exchange_try, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(color="#C77CFF", size=3, alpha=1, show.legend = FALSE)+
+ggplot(P1exchange, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(color="#C77CFF", size=3, alpha=1, show.legend = FALSE)+
   labs(title="P1 Exchange Library Repression vs Activity", x="Repression", y="Fold Induction")+
   scale_y_continuous(expand = c(0.25,0))+
   ylim(0,1.5)+
   theme_minimal()
 ```
-
+#create 1 df with all libraries 
 ```{r}
-library <- rep("A EXCHANGE",nrow(AE_try))
-AE_try <- cbind(AE_try,library)
-library <- rep("GATEWAY",nrow(GATE_try))
-GATE_try <- cbind(GATE_try,library)
-library <- rep("LOOP",nrow(loop_try))
-loop_try <- cbind(loop_try,library)
-library <- rep("ANCHOR",nrow(anchor_try))
-anchor_try <- cbind(anchor_try,library)
-library <- rep("N6P4STEM",nrow(n6p4stem_try))
-n6p4stem_try <- cbind(n6p4stem_try,library)
-library <- rep("N6P4STEM+",nrow(noneg_n6p4stem_try))
-noneg_n6p4stem_try <- cbind(noneg_n6p4stem_try,library)
-library <- rep("N8P4STEM",nrow(n8p4stem_try))
-n8p4stem_try <- cbind(n8p4stem_try,library)
-library <- rep("P3",nrow(P3_try))
-P3_try <- cbind(P3_try, library)
-library <- rep("P1EXCHANGE",nrow(P1exchange_try))
-P1exchange_try <- cbind(P1exchange_try, library)
-plotdf <- rbind(GATE_try[,c(1:9,17)],AE_try[,c(1:9,16)],loop_try,anchor_try,n6p4stem_try,n8p4stem_try,P3_try, P1exchange_try)
+library <- rep("A EXCHANGE",nrow(AE))
+AE <- cbind(AE,library)
+library <- rep("GATEWAY",nrow(GATE))
+GATE <- cbind(GATE,library)
+library <- rep("LOOP",nrow(loop))
+loop <- cbind(loop,library)
+library <- rep("ANCHOR",nrow(anchor))
+anchor <- cbind(anchor,library)
+library <- rep("N6P4STEM",nrow(n6p4stem))
+n6p4stem <- cbind(n6p4stem,library)
+library <- rep("N8P4STEM",nrow(n8p4stem))
+n8p4stem <- cbind(n8p4stem,library)
+library <- rep("P3",nrow(P3))
+P3 <- cbind(P3, library)
+library <- rep("P1EXCHANGE",nrow(P1exchange))
+P1exchange <- cbind(P1exchange, library)
+plotdf <- rbind(GATE[,c(1:9,17)],AE[,c(1:9,16)],loop,anchor,n6p4stem,n8p4stem,P3, P1exchange)
 
 ggplot(plotdf, aes(x=`corr_minus_2AP`, y=`corr_FI`, color = library))+ geom_point(size=2, alpha=0.5, show.legend = TRUE)+
   labs(title="All Libraries Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
-
-nonegplotdf <- rbind(GATE_try[,c(1:9,17)],AE_try[,c(1:9,16)],loop_try,anchor_try,noneg_n6p4stem_try,n8p4stem_try,P3_try, P1exchange_try)
-ggplot(nonegplotdf, aes(x=`corr_minus_2AP`, y=`corr_FI`, color = library))+ geom_point(size=2, alpha=0.5, show.legend = TRUE)+
-  labs(title="All Libraries Repression vs Activity (no negative values)", x="Repression", y="Fold Induction")+
-  theme_minimal()
-
 ```
 
 ```{r}
@@ -165,5 +158,4 @@ ggplot(plotdf, aes(x=`corr_minus_2AP`, y=`corr_FI`)) +
   scale_x_continuous(trans='log10') +
   theme_minimal()+
   facet_wrap(vars(library))
-
 ```
