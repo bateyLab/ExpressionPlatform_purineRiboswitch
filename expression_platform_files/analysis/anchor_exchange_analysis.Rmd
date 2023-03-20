@@ -45,7 +45,7 @@ Formatting of csv: each column is a different colony, first row is the name of t
 This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
 ```{r}
 #read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
-  NH5_AEall <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/AE_DATA.csv", header=T)
+NH5_AEall <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/AE_FINALDATA.csv", header=T)
 empty_columns <- sapply(NH5_AEall, function(x) all(is.na(x) | x==""))
 NH5_AEall <- NH5_AEall[,!empty_columns]
 NH5_AEall[NH5_AEall == -2] <-NA
@@ -186,6 +186,7 @@ allinfoAE$binvalue <- allinfoAE$`REPbin` + allinfoAE$`FIbin`
 allinfoAE$bin <- NA
 allinfoAE$bin[allinfoAE$binvalue==20] <- "top"
 allinfoAE$bin[allinfoAE$binvalue==16] <- "top"
+allinfoAE$bin[allinfoAE$binvalue==15] <- "mid"
 allinfoAE$bin[allinfoAE$binvalue==11] <- "mid"
 allinfoAE$bin[allinfoAE$binvalue==6] <- "bottom"
 #name NH5
@@ -197,7 +198,7 @@ write.xlsx(allinfoAE, '~/Downloads/Expression_platform_project/expression_platfo
 write.csv(allinfoAE, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_binning.csv', row.names = TRUE)
 ```
 #function to read basepairing from df
-```{r}
+#```{r}
 basepairing <- function(base1,base2){
   pairing <- 0
   if(base1=="A"){
@@ -252,7 +253,7 @@ weighted.basepairing <- function(base1,base2){
  
 ```
 #read in df with seq
-```{r}
+#```{r}
 AE_summ_seq <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table_seq.csv")
 SEQ_AE <- AE_summ_seq[,c("X","P1.1","P1P4.1", "P4.2", "P4.3", "P4.4" )]
 SEQ_AE <- filter(SEQ_AE,X!="GFPUV")
@@ -262,7 +263,7 @@ SEQ_AE1 <- SEQ_AE
 
 ```
 #add score for number of bps in P1 and P4
-```{r}
+#```{r}
 #df for score for P4 and score for P1
 SEQ_AE <- SEQ_AE%>% 
   mutate(P1pair = mapply(basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pairing = mapply(basepairing,SEQ_AE[,3],SEQ_AE[,6]) + mapply(basepairing,SEQ_AE[,4], SEQ_AE[,5]))
@@ -280,7 +281,7 @@ SEQ_AE2 <- SEQ_AE2%>%
   mutate(P1pair = mapply(weighted.basepairing,SEQ_AE[,2], SEQ_AE[,3]),P4_pairing = mapply(weighted.basepairing,SEQ_AE[,3],SEQ_AE[,6]) + mapply(weighted.basepairing,SEQ_AE[,4], SEQ_AE[,5]))
 ```
 ##Plots
-```{r}
+#```{r}
 #plain plot that has NH5 as another color 
 is_NH5 <- rep(0,nrow(AE_all_summary_table))
 is_NH5[1] <- 1
@@ -408,7 +409,7 @@ ggplot(whichP4pairinggraph, aes(x=`corr_minus_2AP`, y=`corr_FI`)) +
   facet_wrap(vars(P1.1))
 ```
 
-```{r}
+#```{r}
 
 ##P1 color plot
 ggplot(sillygraph, aes(x=`corr_minus_2AP`, y=`corr_FI`, group=`P4_pairing`)) + 
