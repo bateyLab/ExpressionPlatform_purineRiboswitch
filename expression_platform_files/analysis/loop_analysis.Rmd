@@ -132,8 +132,67 @@ write.csv(loop_summary_table,"~/Downloads/Expression_platform_project/expression
 #write excel
 write.xlsx(loop_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Loop/loop_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(loop_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Loop/loop_all_summary_table.xlsx', rowNames = TRUE)
-
-ggplot(loop_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
-  labs(title="Loop Library Repression vs Activity", x="Repression", y="Fold Induction")+
+#remove GFP from graph
+loop_all_summary_table_noGFP <- loop_all_summary_table[order(row.names(loop_all_summary_table)),]
+loop_all_summary_table_noGFP <- loop_all_summary_table_noGFP[-(1),]
+ggplot(loop_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Loop Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
+```
+
+#binning by REP
+```{r}
+REPbinsloop <- loop_all_summary_table_noGFP
+REPbadbinloop <- REPbinsloop %>% 
+ filter(loop_all_summary_table_noGFP$`corr_minus_2AP` > 9)
+REPbinloop <- rep(1,nrow(REPbadbinloop))
+REPbadbinloop <- cbind(REPbadbinloop,REPbinloop)
+REPmediumbinloop<- REPbinsloop %>% 
+  filter(loop_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & loop_all_summary_table_noGFP$`corr_minus_2AP` <=9)
+REPbinloop <- rep(6,nrow(REPmediumbinloop))
+REPmediumbinloop <- cbind(REPmediumbinloop,REPbinloop)
+REPgreatbinloop <- REPbinsloop %>% 
+ filter(loop_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
+REPbinloop <- rep(10,nrow(REPgreatbinloop))
+REPgreatbinloop <- cbind(REPgreatbinloop,REPbinloop)
+REPallbinsloop <- rbind(REPbadbinloop,REPmediumbinloop,REPgreatbinloop)
+ggplot(REPallbinsloop, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=REPbinloop))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Loop Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryREPallbinsloop <- REPallbinsloop[order(row.names(REPallbinsloop)),]
+```
+
+#binning by FI
+```{r}
+FIbinsloop <- loop_all_summary_table_noGFP
+FIgoodbinloop <- FIbinsloop %>% 
+ filter(loop_all_summary_table_noGFP$`corr_FI` >= 0.5)
+FIbinloop <- rep(10,nrow(FIgoodbinloop))
+FIgoodbinloop <- cbind(FIgoodbinloop,FIbinloop)
+FIbadbinloop <- FIbinsloop %>% 
+ filter(loop_all_summary_table_noGFP$`corr_FI` < 0.5)
+FIbinloop <- rep(5,nrow(FIbadbinloop))
+FIbadbinloop <- cbind(FIbadbinloop,FIbinloop)
+FIallbinsloop <- rbind(FIbadbinloop,FIgoodbinloop)
+ggplot(FIallbinsloop, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinloop))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Loop Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryFIallbinsloop <- FIallbinsloop[order(row.names(FIallbinsloop)),]
+```
+#all bins together
+```{r}
+allinfoloop <- cbind(tryREPallbinsloop,tryFIallbinsloop[,"FIbinloop"])
+colnames(allinfoloop) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
+allinfoloop$binvalue <- allinfoloop$`REPbin` + allinfoloop$`FIbin`
+allinfoloop$bin <- NA
+allinfoloop$bin[allinfoloop$binvalue==20] <- "top"
+allinfoloop$bin[allinfoloop$binvalue==16] <- "top"
+allinfoloop$bin[allinfoloop$binvalue==11] <- "mid"
+allinfoloop$bin[allinfoloop$binvalue==6] <- "bottom"
+#name NH5
+allinfoloop["NH5","bin"] <- "NH5"
+ggplot(allinfoloop, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="Loop Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+write.xlsx(allinfoloop, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/loop/loop_binning.xlsx', rowNames = TRUE)
 ```
