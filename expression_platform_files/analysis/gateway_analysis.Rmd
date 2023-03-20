@@ -133,8 +133,66 @@ write.csv(gateway_summary_table,"~/Downloads/Expression_platform_project/express
 #write excel
 write.xlsx(gateway_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Gateway/gateway_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(gateway_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Gateway/gateway_all_summary_table.xlsx', rowNames = TRUE)
-
-ggplot(gateway_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+#remove GFPUV
+gateway_all_summary_table_noGFP <- gateway_all_summary_table[order(row.names(gateway_all_summary_table)),]
+gateway_all_summary_table_noGFP <- gateway_all_summary_table_noGFP[-(1),]
+ggplot(gateway_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
   labs(title="Gateway Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
+```
+#binning by REP
+```{r}
+REPbinsgateway <- gateway_all_summary_table_noGFP
+REPbadbingateway <- REPbinsgateway %>% 
+ filter(gateway_all_summary_table_noGFP$`corr_minus_2AP` > 9)
+REPbingateway <- rep(1,nrow(REPbadbingateway))
+REPbadbingateway <- cbind(REPbadbingateway,REPbingateway)
+REPmediumbingateway<- REPbinsgateway %>% 
+  filter(gateway_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & gateway_all_summary_table_noGFP$`corr_minus_2AP` <=9)
+REPbingateway <- rep(6,nrow(REPmediumbingateway))
+REPmediumbingateway <- cbind(REPmediumbingateway,REPbingateway)
+REPgreatbingateway <- REPbinsgateway %>% 
+ filter(gateway_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
+REPbingateway <- rep(10,nrow(REPgreatbingateway))
+REPgreatbingateway <- cbind(REPgreatbingateway,REPbingateway)
+REPallbinsgateway <- rbind(REPbadbingateway,REPmediumbingateway,REPgreatbingateway)
+ggplot(REPallbinsgateway, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=REPbingateway))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="gateway Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryREPallbinsgateway <- REPallbinsgateway[order(row.names(REPallbinsgateway)),]
+```
+
+#binning by FI
+```{r}
+FIbinsgateway <- gateway_all_summary_table_noGFP
+FIgoodbingateway <- FIbinsgateway %>% 
+ filter(gateway_all_summary_table_noGFP$`corr_FI` >= 0.5)
+FIbingateway <- rep(10,nrow(FIgoodbingateway))
+FIgoodbingateway <- cbind(FIgoodbingateway,FIbingateway)
+FIbadbingateway <- FIbinsgateway %>% 
+ filter(gateway_all_summary_table_noGFP$`corr_FI` < 0.5)
+FIbingateway <- rep(5,nrow(FIbadbingateway))
+FIbadbingateway <- cbind(FIbadbingateway,FIbingateway)
+FIallbinsgateway <- rbind(FIbadbingateway,FIgoodbingateway)
+ggplot(FIallbinsgateway, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbingateway))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="gateway Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryFIallbinsgateway <- FIallbinsgateway[order(row.names(FIallbinsgateway)),]
+```
+#all bins together
+```{r}
+allinfogateway <- cbind(tryREPallbinsgateway,tryFIallbinsgateway[,"FIbingateway"])
+colnames(allinfogateway) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
+allinfogateway$binvalue <- allinfogateway$`REPbin` + allinfogateway$`FIbin`
+allinfogateway$bin <- NA
+allinfogateway$bin[allinfogateway$binvalue==20] <- "top"
+allinfogateway$bin[allinfogateway$binvalue==16] <- "top"
+allinfogateway$bin[allinfogateway$binvalue==11] <- "mid"
+allinfogateway$bin[allinfogateway$binvalue==6] <- "bottom"
+#name NH5
+allinfogateway["NH5","bin"] <- "NH5"
+ggplot(allinfogateway, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="gateway Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+write.xlsx(allinfogateway, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/gateway/gateway_binning.xlsx', rowNames = TRUE)
 ```

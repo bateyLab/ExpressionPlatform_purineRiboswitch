@@ -132,8 +132,66 @@ write.csv(anchor_summary_table,"~/Downloads/Expression_platform_project/expressi
 #write excel
 write.xlsx(anchor_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(anchor_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_all_summary_table.xlsx', rowNames = TRUE)
-
-ggplot(anchor_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+#remove gfpUV
+anchor_all_summary_table_noGFP <- anchor_all_summary_table[order(row.names(anchor_all_summary_table)),]
+anchor_all_summary_table_noGFP <- anchor_all_summary_table_noGFP[-(1),]
+ggplot(anchor_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
   labs(title="Anchor Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
+```
+#binning by REP
+```{r}
+REPbinsanchor <- anchor_all_summary_table_noGFP
+REPbadbinanchor <- REPbinsanchor %>% 
+ filter(anchor_all_summary_table_noGFP$`corr_minus_2AP` > 9)
+REPbinanchor <- rep(1,nrow(REPbadbinanchor))
+REPbadbinanchor <- cbind(REPbadbinanchor,REPbinanchor)
+REPmediumbinanchor<- REPbinsanchor %>% 
+  filter(anchor_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & anchor_all_summary_table_noGFP$`corr_minus_2AP` <=9)
+REPbinanchor <- rep(6,nrow(REPmediumbinanchor))
+REPmediumbinanchor <- cbind(REPmediumbinanchor,REPbinanchor)
+REPgreatbinanchor <- REPbinsanchor %>% 
+ filter(anchor_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
+REPbinanchor <- rep(10,nrow(REPgreatbinanchor))
+REPgreatbinanchor <- cbind(REPgreatbinanchor,REPbinanchor)
+REPallbinsanchor <- rbind(REPbadbinanchor,REPmediumbinanchor,REPgreatbinanchor)
+ggplot(REPallbinsanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=REPbinanchor))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryREPallbinsanchor <- REPallbinsanchor[order(row.names(REPallbinsanchor)),]
+```
+
+#binning by FI
+```{r}
+FIbinsanchor <- anchor_all_summary_table_noGFP
+FIgoodbinanchor <- FIbinsanchor %>% 
+ filter(anchor_all_summary_table_noGFP$`corr_FI` >= 0.5)
+FIbinanchor <- rep(10,nrow(FIgoodbinanchor))
+FIgoodbinanchor <- cbind(FIgoodbinanchor,FIbinanchor)
+FIbadbinanchor <- FIbinsanchor %>% 
+ filter(anchor_all_summary_table_noGFP$`corr_FI` < 0.5)
+FIbinanchor <- rep(5,nrow(FIbadbinanchor))
+FIbadbinanchor <- cbind(FIbadbinanchor,FIbinanchor)
+FIallbinsanchor <- rbind(FIbadbinanchor,FIgoodbinanchor)
+ggplot(FIallbinsanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinanchor))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryFIallbinsanchor <- FIallbinsanchor[order(row.names(FIallbinsanchor)),]
+```
+#all bins together
+```{r}
+allinfoanchor <- cbind(tryREPallbinsanchor,tryFIallbinsanchor[,"FIbinanchor"])
+colnames(allinfoanchor) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
+allinfoanchor$binvalue <- allinfoanchor$`REPbin` + allinfoanchor$`FIbin`
+allinfoanchor$bin <- NA
+allinfoanchor$bin[allinfoanchor$binvalue==20] <- "top"
+allinfoanchor$bin[allinfoanchor$binvalue==16] <- "top"
+allinfoanchor$bin[allinfoanchor$binvalue==11] <- "mid"
+allinfoanchor$bin[allinfoanchor$binvalue==6] <- "bottom"
+#name NH5
+allinfoanchor["NH5","bin"] <- "NH5"
+ggplot(allinfoanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+write.xlsx(allinfoanchor, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_binning.xlsx', rowNames = TRUE)
 ```

@@ -132,25 +132,27 @@ write.csv(p1exchange_summary_table,"~/Downloads/Expression_platform_project/expr
 #write excel
 write.xlsx(p1exchange_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/p1exchange/p1exchange_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(p1exchange_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/p1exchange/p1exchange_all_summary_table.xlsx', rowNames = TRUE)
+p1exchange_all_summary_table_noGFP <- p1exchange_all_summary_table[order(row.names(p1exchange_all_summary_table)),]
+p1exchange_all_summary_table_noGFP <- p1exchange_all_summary_table_noGFP[-(1),]
 
-ggplot(p1exchange_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+ggplot(p1exchange_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
   labs(title="P1 exchange Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 ```
 
 #binning by REP
 ```{r}
-REPbinsP1ex <- p1exchange_all_summary_table
+REPbinsP1ex <- p1exchange_all_summary_table_noGFP
 REPbadbinP1ex <- REPbinsP1ex %>% 
- filter(p1exchange_all_summary_table$`corr_minus_2AP` > 9)
+ filter(p1exchange_all_summary_table_noGFP$`corr_minus_2AP` > 9)
 REPbinP1ex <- rep(1,nrow(REPbadbinP1ex))
 REPbadbinP1ex <- cbind(REPbadbinP1ex,REPbinP1ex)
 REPmediumbinP1ex<- REPbinsP1ex %>% 
-  filter(p1exchange_all_summary_table$`corr_minus_2AP` >=1.5 & p1exchange_all_summary_table$`corr_minus_2AP` <=9)
+  filter(p1exchange_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & p1exchange_all_summary_table_noGFP$`corr_minus_2AP` <=9)
 REPbinP1ex <- rep(6,nrow(REPmediumbinP1ex))
 REPmediumbinP1ex <- cbind(REPmediumbinP1ex,REPbinP1ex)
 REPgreatbinP1ex <- REPbinsP1ex %>% 
- filter(p1exchange_all_summary_table$`corr_minus_2AP` < 1.5)
+ filter(p1exchange_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
 REPbinP1ex <- rep(10,nrow(REPgreatbinP1ex))
 REPgreatbinP1ex <- cbind(REPgreatbinP1ex,REPbinP1ex)
 REPallbinsP1ex <- rbind(REPbadbinP1ex,REPmediumbinP1ex,REPgreatbinP1ex)
@@ -162,13 +164,13 @@ tryREPallbinsP1ex <- REPallbinsP1ex[order(row.names(REPallbinsP1ex)),]
 
 #binning by FI
 ```{r}
-FIbinsP1ex <- p1exchange_all_summary_table
+FIbinsP1ex <- p1exchange_all_summary_table_noGFP
 FIgoodbinP1ex <- FIbinsP1ex %>% 
- filter(p1exchange_all_summary_table$`corr_FI` >= 0.5)
+ filter(p1exchange_all_summary_table_noGFP$`corr_FI` >= 0.5)
 FIbinP1ex <- rep(10,nrow(FIgoodbinP1ex))
 FIgoodbinP1ex <- cbind(FIgoodbinP1ex,FIbinP1ex)
 FIbadbinP1ex <- FIbinsP1ex %>% 
- filter(p1exchange_all_summary_table$`corr_FI` < 0.5)
+ filter(p1exchange_all_summary_table_noGFP$`corr_FI` < 0.5)
 FIbinP1ex <- rep(5,nrow(FIbadbinP1ex))
 FIbadbinP1ex <- cbind(FIbadbinP1ex,FIbinP1ex)
 FIallbinsP1ex <- rbind(FIbadbinP1ex,FIgoodbinP1ex)
@@ -180,8 +182,6 @@ tryFIallbinsP1ex <- FIallbinsP1ex[order(row.names(FIallbinsP1ex)),]
 #all bins together
 ```{r}
 allinfoP1ex <- cbind(tryREPallbinsP1ex,tryFIallbinsP1ex[,"FIbinP1ex"])
-#remove GFPUV which should be first row bc ordered by name
-allinfoP1ex <- allinfoP1ex[-(1),]
 colnames(allinfoP1ex) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
 allinfoP1ex$binvalue <- allinfoP1ex$`REPbin` + allinfoP1ex$`FIbin`
 allinfoP1ex$bin <- NA

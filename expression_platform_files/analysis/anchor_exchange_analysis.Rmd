@@ -133,12 +133,68 @@ write.csv(AE_summary_table,"~/Downloads/Expression_platform_project/expression_p
 #write excel
 write.xlsx(AE_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(AE_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_all_summary_table.xlsx', rowNames = TRUE)
-
-ggplot(AE_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+AE_all_summary_table_noGFP <- AE_all_summary_table[order(row.names(AE_all_summary_table)),]
+AE_all_summary_table_noGFP <- AE_all_summary_table_noGFP[-(1),]
+ggplot(AE_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
   labs(title="Anchor exchange Library Repression vs Activity", x="Repression", y="Fold Induction")+
   theme_minimal()
 ```
+#binning by REP
+```{r}
+REPbinsAE <- AE_all_summary_table_noGFP
+REPbadbinAE <- REPbinsAE %>% 
+ filter(AE_all_summary_table_noGFP$`corr_minus_2AP` > 9)
+REPbinAE <- rep(1,nrow(REPbadbinAE))
+REPbadbinAE <- cbind(REPbadbinAE,REPbinAE)
+REPmediumbinAE<- REPbinsAE %>% 
+  filter(AE_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & AE_all_summary_table_noGFP$`corr_minus_2AP` <=9)
+REPbinAE <- rep(6,nrow(REPmediumbinAE))
+REPmediumbinAE <- cbind(REPmediumbinAE,REPbinAE)
+REPgreatbinAE <- REPbinsAE %>% 
+ filter(AE_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
+REPbinAE <- rep(10,nrow(REPgreatbinAE))
+REPgreatbinAE <- cbind(REPgreatbinAE,REPbinAE)
+REPallbinsAE <- rbind(REPbadbinAE,REPmediumbinAE,REPgreatbinAE)
+ggplot(REPallbinsAE, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=REPbinAE))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="AE Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryREPallbinsAE <- REPallbinsAE[order(row.names(REPallbinsAE)),]
+```
 
+#binning by FI
+```{r}
+FIbinsAE <- AE_all_summary_table_noGFP
+FIgoodbinAE <- FIbinsAE %>% 
+ filter(AE_all_summary_table_noGFP$`corr_FI` >= 0.5)
+FIbinAE <- rep(10,nrow(FIgoodbinAE))
+FIgoodbinAE <- cbind(FIgoodbinAE,FIbinAE)
+FIbadbinAE <- FIbinsAE %>% 
+ filter(AE_all_summary_table_noGFP$`corr_FI` < 0.5)
+FIbinAE <- rep(5,nrow(FIbadbinAE))
+FIbadbinAE <- cbind(FIbadbinAE,FIbinAE)
+FIallbinsAE <- rbind(FIbadbinAE,FIgoodbinAE)
+ggplot(FIallbinsAE, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinAE))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="AE Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryFIallbinsAE <- FIallbinsAE[order(row.names(FIallbinsAE)),]
+```
+#all bins together
+```{r}
+allinfoAE <- cbind(tryREPallbinsAE,tryFIallbinsAE[,"FIbinAE"])
+colnames(allinfoAE) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
+allinfoAE$binvalue <- allinfoAE$`REPbin` + allinfoAE$`FIbin`
+allinfoAE$bin <- NA
+allinfoAE$bin[allinfoAE$binvalue==20] <- "top"
+allinfoAE$bin[allinfoAE$binvalue==16] <- "top"
+allinfoAE$bin[allinfoAE$binvalue==11] <- "mid"
+allinfoAE$bin[allinfoAE$binvalue==6] <- "bottom"
+#name NH5
+allinfoAE["NH5","bin"] <- "NH5"
+ggplot(allinfoAE, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="AE Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+write.xlsx(allinfoAE, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_binning.xlsx', rowNames = TRUE)
+```
 #function to read basepairing from df
 ```{r}
 basepairing <- function(base1,base2){

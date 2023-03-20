@@ -132,24 +132,25 @@ write.csv(N8P4stem_summary_table,"~/Downloads/Expression_platform_project/expres
 #write excel
 write.xlsx(N8P4stem_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n8_P4stem/N8P4stem_summary_table.xlsx', rowNames = TRUE)
 write.xlsx(N8P4stem_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n8_P4stem/N8P4stem_all_summary_table.xlsx', rowNames = TRUE)
-
-ggplot(N8P4stem_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+N8P4stem_all_summary_table_noGFP <- N8P4stem_all_summary_table[order(row.names(N8P4stem_all_summary_table)),]
+N8P4stem_all_summary_table_noGFP <- N8P4stem_all_summary_table_noGFP[-(1),]
+ggplot(N8P4stem_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
   labs(title="N8 P4 Stem Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 ```
 #binning by REP
 ```{r}
-REPbinsN8P4 <- N8P4stem_all_summary_table
+REPbinsN8P4 <- N8P4stem_all_summary_table_noGFP
 REPbadbinN8P4 <- REPbinsN8P4 %>% 
- filter(N8P4stem_all_summary_table$`corr_minus_2AP` > 9)
+ filter(N8P4stem_all_summary_table_noGFP$`corr_minus_2AP` > 9)
 REPbinN8P4 <- rep(1,nrow(REPbadbinN8P4))
 REPbadbinN8P4 <- cbind(REPbadbinN8P4,REPbinN8P4)
 REPmediumbinN8P4<- REPbinsN8P4 %>% 
-  filter(N8P4stem_all_summary_table$`corr_minus_2AP` >=1.5 & N8P4stem_all_summary_table$`corr_minus_2AP` <=9)
+  filter(N8P4stem_all_summary_table_noGFP$`corr_minus_2AP` >=1.5 & N8P4stem_all_summary_table_noGFP$`corr_minus_2AP` <=9)
 REPbinN8P4 <- rep(6,nrow(REPmediumbinN8P4))
 REPmediumbinN8P4 <- cbind(REPmediumbinN8P4,REPbinN8P4)
 REPgreatbinN8P4 <- REPbinsN8P4 %>% 
- filter(N8P4stem_all_summary_table$`corr_minus_2AP` < 1.5)
+ filter(N8P4stem_all_summary_table_noGFP$`corr_minus_2AP` < 1.5)
 REPbinN8P4 <- rep(10,nrow(REPgreatbinN8P4))
 REPgreatbinN8P4 <- cbind(REPgreatbinN8P4,REPbinN8P4)
 REPallbinsN8P4 <- rbind(REPbadbinN8P4,REPmediumbinN8P4,REPgreatbinN8P4)
@@ -161,13 +162,13 @@ tryREPallbinsN8P4 <- REPallbinsN8P4[order(row.names(REPallbinsN8P4)),]
 
 #binning by FI
 ```{r}
-FIbinsN8P4 <- N8P4stem_all_summary_table
+FIbinsN8P4 <- N8P4stem_all_summary_table_noGFP
 FIgoodbinN8P4 <- FIbinsN8P4 %>% 
- filter(N8P4stem_all_summary_table$`corr_FI` >= 0.5)
+ filter(N8P4stem_all_summary_table_noGFP$`corr_FI` >= 0.5)
 FIbinN8P4 <- rep(10,nrow(FIgoodbinN8P4))
 FIgoodbinN8P4 <- cbind(FIgoodbinN8P4,FIbinN8P4)
 FIbadbinN8P4 <- FIbinsN8P4 %>% 
- filter(N8P4stem_all_summary_table$`corr_FI` < 0.5)
+ filter(N8P4stem_all_summary_table_noGFP$`corr_FI` < 0.5)
 FIbinN8P4 <- rep(5,nrow(FIbadbinN8P4))
 FIbadbinN8P4 <- cbind(FIbadbinN8P4,FIbinN8P4)
 FIallbinsN8P4 <- rbind(FIbadbinN8P4,FIgoodbinN8P4)
@@ -179,8 +180,6 @@ tryFIallbinsN8P4 <- FIallbinsN8P4[order(row.names(FIallbinsN8P4)),]
 #all bins together
 ```{r}
 allinfoN8P4 <- cbind(tryREPallbinsN8P4,tryFIallbinsN8P4[,"FIbinN8P4"])
-#remove GFPUV which should be first row bc ordered by name
-allinfoN8P4 <- allinfoN8P4[-(1),]
 colnames(allinfoN8P4) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
 allinfoN8P4$binvalue <- allinfoN8P4$`REPbin` + allinfoN8P4$`FIbin`
 allinfoN8P4$bin <- NA
