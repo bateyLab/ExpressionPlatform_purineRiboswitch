@@ -256,4 +256,5 @@ ggplot(allinformation, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_po
   labs(title="N=6 P4 Stem Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinformation, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/n6p4stem_binning.xlsx', rowNames = TRUE)
+write.csv(allinformation, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/n6p4stem_binning.csv', row.names = TRUE)
 ```

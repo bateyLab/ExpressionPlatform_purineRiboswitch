@@ -194,4 +194,5 @@ ggplot(allinfoP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(s
   labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoP3, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_binning.xlsx', rowNames = TRUE)
+write.csv(allinfoP3, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_binning.csv', row.names = TRUE)
 ```

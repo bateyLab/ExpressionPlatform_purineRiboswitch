@@ -194,6 +194,7 @@ ggplot(allinfoAE, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(s
   labs(title="AE Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoAE, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_binning.xlsx', rowNames = TRUE)
+write.csv(allinfoAE, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/Anchor_exchange/AE_binning.csv', row.names = TRUE)
 ```
 #function to read basepairing from df
 ```{r}

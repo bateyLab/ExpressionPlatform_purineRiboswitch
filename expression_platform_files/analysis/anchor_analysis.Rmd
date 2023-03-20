@@ -194,4 +194,5 @@ ggplot(allinfoanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_poi
   labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoanchor, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_binning.xlsx', rowNames = TRUE)
+write.csv(anchor_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_binning.csv", row.names = TRUE)
 ```
