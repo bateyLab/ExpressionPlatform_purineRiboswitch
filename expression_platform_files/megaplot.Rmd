@@ -102,7 +102,7 @@ P1exchange <- filter(P1exchange,X!="gfpUV")
 colnames(P1exchange) <- c("colony","-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI","corr_minus_2AP", "corr_plus_2AP","corr_FI")
 
 ggplot(P1exchange, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(color="#C77CFF", size=3, alpha=1, show.legend = FALSE)+
-  labs(title="P1 Exchange Library Repression vs Activity", x="Repression", y="Fold Induction")+
+  labs(title="P1 Exchange Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   scale_y_continuous(expand = c(0.25,0))+
   ylim(0,1.5)+
   theme_minimal()
@@ -128,7 +128,7 @@ P1exchange <- cbind(P1exchange, library)
 plotdf <- rbind(GATE[,c(1:9,17)],AE[,c(1:9,16)],loop,anchor,n6p4stem,n8p4stem,P3, P1exchange)
 
 ggplot(plotdf, aes(x=`corr_minus_2AP`, y=`corr_FI`, color = library))+ geom_point(size=2, alpha=0.5, show.legend = TRUE)+
-  labs(title="All Libraries Repression vs Activity", x="Repression", y="Fold Induction")+
+  labs(title="All Libraries Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 ```
 
