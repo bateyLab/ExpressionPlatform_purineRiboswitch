@@ -1,6 +1,8 @@
 ---
 title: "P3_analysis"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -133,6 +135,64 @@ write.xlsx(P3_summary_table, '~/Downloads/Expression_platform_project/expression
 write.xlsx(P3_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_all_summary_table.xlsx', rowNames = TRUE)
 
 ggplot(P3_all_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
-  labs(title="P3 Library Repression vs Activity", x="Repression", y="Fold Induction")+
+  labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
+```
+#binning by REP
+```{r}
+REPbinsP3 <- P3_all_summary_table
+REPbadbinP3 <- REPbinsP3 %>% 
+ filter(P3_all_summary_table$`corr_minus_2AP` > 9)
+REPbinP3 <- rep(1,nrow(REPbadbinP3))
+REPbadbinP3 <- cbind(REPbadbinP3,REPbinP3)
+REPmediumbinP3<- REPbinsP3 %>% 
+  filter(P3_all_summary_table$`corr_minus_2AP` >=1.5 & P3_all_summary_table$`corr_minus_2AP` <=9)
+REPbinP3 <- rep(6,nrow(REPmediumbinP3))
+REPmediumbinP3 <- cbind(REPmediumbinP3,REPbinP3)
+REPgreatbinP3 <- REPbinsP3 %>% 
+ filter(P3_all_summary_table$`corr_minus_2AP` < 1.5)
+REPbinP3 <- rep(10,nrow(REPgreatbinP3))
+REPgreatbinP3 <- cbind(REPgreatbinP3,REPbinP3)
+REPallbinsP3 <- rbind(REPbadbinP3,REPmediumbinP3,REPgreatbinP3)
+ggplot(REPallbinsP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=REPbinP3))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryREPallbinsP3 <- REPallbinsP3[order(row.names(REPallbinsP3)),]
+```
+
+#binning by FI
+```{r}
+FIbinsP3 <- P3_all_summary_table
+FIgoodbinP3 <- FIbinsP3 %>% 
+ filter(P3_all_summary_table$`corr_FI` >= 0.5)
+FIbinP3 <- rep(10,nrow(FIgoodbinP3))
+FIgoodbinP3 <- cbind(FIgoodbinP3,FIbinP3)
+FIbadbinP3 <- FIbinsP3 %>% 
+ filter(P3_all_summary_table$`corr_FI` < 0.5)
+FIbinP3 <- rep(5,nrow(FIbadbinP3))
+FIbadbinP3 <- cbind(FIbadbinP3,FIbinP3)
+FIallbinsP3 <- rbind(FIbadbinP3,FIgoodbinP3)
+ggplot(FIallbinsP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinP3))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+tryFIallbinsP3 <- FIallbinsP3[order(row.names(FIallbinsP3)),]
+```
+#all bins together
+```{r}
+allinfoP3 <- cbind(tryREPallbinsP3,tryFIallbinsP3[,"FIbinP3"])
+#remove GFPUV which should be first row bc ordered by name
+allinfoP3 <- allinfoP3[-(1),]
+colnames(allinfoP3) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE", "FI", "corr_minus_2AP", "corr_plus_2AP", "corr_FI", "REPbin", "FIbin")
+allinfoP3$binvalue <- allinfoP3$`REPbin` + allinfoP3$`FIbin`
+allinfoP3$bin <- NA
+allinfoP3$bin[allinfoP3$binvalue==20] <- "top"
+allinfoP3$bin[allinfoP3$binvalue==16] <- "top"
+allinfoP3$bin[allinfoP3$binvalue==11] <- "mid"
+allinfoP3$bin[allinfoP3$binvalue==6] <- "bottom"
+#name NH5
+allinfoP3["NH5","bin"] <- "NH5"
+ggplot(allinfoP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+write.xlsx(allinfoP3, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_binning.xlsx', rowNames = TRUE)
 ```
