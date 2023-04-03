@@ -193,7 +193,7 @@ allinfoP1ex$bin[allinfoP1ex$binvalue==6] <- "bottom"
 #name NH5
 allinfoP1ex["NH5","bin"] <- "NH5"
 ggplot(allinfoP1ex, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
-  labs(title="P1ex Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  labs(title="P1 Exchange Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoP1ex, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1exchange/P1exchange_binning.xlsx', rowNames = TRUE)
 write.csv(allinfoP1ex, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1exchange/P1exchange_binning.csv', row.names = TRUE)

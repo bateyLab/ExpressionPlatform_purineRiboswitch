@@ -170,7 +170,7 @@ write.xlsx(raw_summary_table, '~/Downloads/Expression_platform_project/expressio
 ```
 
 ##Analysis of colonies that were close to pbr322 
-```{r}
+
 R10N.1B1 <- as.data.frame(noOut_NH5_n6p4stem_minus$R10N.1B1)
 name <- rep("R10N.1B1",nrow(R10N.1B1))
 R10N.1B1 <- cbind(R10N.1B1,name)
@@ -200,7 +200,7 @@ with(neg_df_rep, shapiro.test(`-2AP fluorescence`[colony == "R3N.2D4"]))
 res.ftest <- var.test(`-2AP fluorescence` ~ colony, data = neg_df_rep)
 res.ftest
 #p values is less than 0.05 so we cannot use standard t-test
-```
+
 #binning by REP
 ```{r}
 REPbins <- N6P4STEM_all_summary_table_noGFP
@@ -257,4 +257,75 @@ ggplot(allinformation, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_po
   theme_minimal()
 write.xlsx(allinformation, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/n6p4stem_binning.xlsx', rowNames = TRUE)
 write.csv(allinformation, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/n6p4stem_binning.csv', row.names = TRUE)
+```
+
+
+```{r}
+NOTCORRn6p4stem <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/notpbrcorr_N6_P4stem_data.csv", header=T)
+empty_columns <- sapply(NOTCORRn6p4stem, function(x) all(is.na(x) | x==""))
+NOTCORRn6p4stem <- NOTCORRn6p4stem[,!empty_columns]
+NOTCORRn6p4stem[NOTCORRn6p4stem == -2] <-NA
+#MINUS 2AP DF
+NOTCORRn6p4stem_minus1 <- NOTCORRn6p4stem[NOTCORRn6p4stem == "(-)",]
+NOTCORRn6p4stem_minus <- NOTCORRn6p4stem_minus1[rowSums(is.na(NOTCORRn6p4stem_minus1)) !=ncol(NOTCORRn6p4stem_minus1),]
+rm(NOTCORRn6p4stem_minus1)
+#remove rows that were only NA and delete DF that was filled with NA only columns
+#PLUS 2AP DF
+NOTCORRn6p4stem_plus1 <- NOTCORRn6p4stem[NOTCORRn6p4stem == "(+)",]
+NOTCORRn6p4stem_plus <- NOTCORRn6p4stem_plus1[rowSums(is.na(NOTCORRn6p4stem_plus1)) !=ncol(NOTCORRn6p4stem_plus1),]
+rm(NOTCORRn6p4stem_plus1)
+#remove rows that were only NA 
+
+noOut_NOTCORRn6p4stem_minus.list <- apply(NOTCORRn6p4stem_minus[,2:ncol(NOTCORRn6p4stem_minus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_NOTCORRn6p4stem_minus_sideways <- plyr::ldply(noOut_NOTCORRn6p4stem_minus.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_NOTCORRn6p4stem_minus <- data.frame(t(noOut_NOTCORRn6p4stem_minus_sideways[-1]))
+colnames(noOut_NOTCORRn6p4stem_minus) <- noOut_NOTCORRn6p4stem_minus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+NOTCORRn6p4stem_minus_noOut_wideform <- cbind(NOTCORRn6p4stem_minus[1:nrow(noOut_NOTCORRn6p4stem_minus),1], noOut_NOTCORRn6p4stem_minus[,1:ncol(noOut_NOTCORRn6p4stem_minus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(NOTCORRn6p4stem_minus_noOut_wideform)[1] <- "COLONIES"
+#rename the first column 
+long_NOTCORRn6p4stem_minus <- gather(NOTCORRn6p4stem_minus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+##Analysis of colonies that were close to pbr322 
+```{r}
+PBR <- as.data.frame(noOut_NOTCORRn6p4stem_minus$PBR)
+name <- rep("PBR",nrow(PBR))
+PBR <- cbind(PBR,name)
+PBR <- na.omit(PBR)
+colnames(PBR) <- c("-2AP fluorescence","colony")
+R10N.1B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R10N.1B1)
+name <- rep("R10N.1B1",nrow(R10N.1B1))
+R10N.1B1 <- cbind(R10N.1B1,name)
+R10N.1B1 <- na.omit(R10N.1B1)
+colnames(R10N.1B1) <- c("-2AP fluorescence","colony")
+R3N.2D4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.2D4)
+name <- rep("R3N.2D4",nrow(R3N.2D4))
+R3N.2D4 <- cbind(R3N.2D4,name)
+R3N.2D4 <- na.omit(R3N.2D4)
+colnames(R3N.2D4) <- c("-2AP fluorescence","colony")
+neg_df_rep <- rbind(PBR,R10N.1B1, R3N.2D4)
+
+ggplot(neg_df_rep, aes(x=`colony`,`-2AP fluorescence`, color=`colony`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  theme(legend.position="none")
+
+group_by(neg_df_rep, colony) %>%
+  summarise(
+    count = n(),
+    mean = mean(`-2AP fluorescence`, na.rm = TRUE),
+    sd = sd(`-2AP fluorescence`, na.rm = TRUE)
+  )
+
+R10b1 <- neg_df_rep %>%
+  filter(colony != "R3N.2D4")
+
+  t.test(`-2AP fluorescence` ~ colony, data=R10b1)
+R2d4 <- neg_df_rep %>%
+  filter(colony != "R10N.1B1")
+
+  t.test(`-2AP fluorescence` ~ colony, data=R2d4)
 ```
