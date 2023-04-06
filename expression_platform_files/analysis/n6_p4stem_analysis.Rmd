@@ -326,20 +326,502 @@ group_by(neg_df_rep, colony) %>%
     sd = sd(`-2AP fluorescence`, na.rm = TRUE)
   )
 
-R10b1 <- neg_df_rep %>%
-  filter(colony != "R3N.2D4")
+R10b1 <- rbind(PBR,R10N.1B1)
 
   t.test(`-2AP fluorescence` ~ colony, data=R10b1)
-R2d4 <- neg_df_rep %>%
-  filter(colony != "R10N.1B1")
+R2d4 <- rbind(PBR, R3N.2D4)
 
   t.test(`-2AP fluorescence` ~ colony, data=R2d4)
  
-NH5 <- neg_df_rep %>%
-  filter(colony != c("R10N.1B1", "R3.N2D4"))
+NH5 <- rbind(PBR,NH5)
 
-  t.test(`-2AP fluorescence` ~ colony, data=R2d4)
-   
+  t.test(`-2AP fluorescence` ~ colony, data=NH5)
+  
+#doing all of the other top preformers to add to this plot
+#R10N.1B1 IS IN THIS BUT ALREADY MADE IT SAME WITH R3N.2D4
+R10N.1C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R10N.1C2)
+name <- rep("R10N.1C2",nrow(R10N.1C2))
+R10N.1C2 <- cbind(R10N.1C2,name)
+R10N.1C2 <- na.omit(R10N.1C2)
+colnames(R10N.1C2) <- c("-2AP fluorescence","colony")
+r10n.1c2.2<- rbind(PBR,R10N.1C2)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r10n.1c2.2)
+
+R10N.2B2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R10N.2B2)
+name <- rep("R10N.2B2",nrow(R10N.2B2))
+R10N.2B2 <- cbind(R10N.2B2,name)
+R10N.2B2 <- na.omit(R10N.2B2)
+colnames(R10N.2B2) <- c("-2AP fluorescence","colony")
+r10n.2b2.2<- rbind(PBR,R10N.2B2)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r10n.2b2.2)
+
+R10N.2C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R10N.2C3)
+name <- rep("R10N.2C3",nrow(R10N.2C3))
+R10N.2C3 <- cbind(R10N.2C3,name)
+R10N.2C3 <- na.omit(R10N.2C3)
+colnames(R10N.2C3) <- c("-2AP fluorescence","colony")
+r10n.2c3.2<- rbind(PBR,R10N.2C3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r10n.2c3.2)
+  
+R1N.3C1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R1N.3C1)
+name <- rep("R1N.3C1",nrow(R1N.3C1))
+R1N.3C1 <- cbind(R1N.3C1,name)
+R1N.3C1 <- na.omit(R1N.3C1)
+colnames(R1N.3C1) <- c("-2AP fluorescence","colony")
+r1n.3c1.2<- rbind(PBR,R1N.3C1)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r1n.3c1.2)
+  
+R1N.4C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R1N.4C3)
+name <- rep("R1N.4C3",nrow(R1N.4C3))
+R1N.4C3 <- cbind(R1N.4C3,name)
+R1N.4C3 <- na.omit(R1N.4C3)
+colnames(R1N.4C3) <- c("-2AP fluorescence","colony")
+r1n.4c3.2<- rbind(PBR,R1N.4C3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r1n.4c3.2)
+  
+R2N.1D1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.1D1)
+name <- rep("R2N.1D1",nrow(R2N.1D1))
+R2N.1D1 <- cbind(R2N.1D1,name)
+R2N.1D1 <- na.omit(R2N.1D1)
+colnames(R2N.1D1) <- c("-2AP fluorescence","colony")
+r2n.1d1.2<- rbind(PBR,R2N.1D1)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r2n.1d1.2)
+  
+R2N.2A2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.2A2)
+name <- rep("R2N.2A2",nrow(R2N.2A2))
+R2N.2A2 <- cbind(R2N.2A2,name)
+R2N.2A2 <- na.omit(R2N.2A2)
+colnames(R2N.2A2) <- c("-2AP fluorescence","colony")
+r2n.2a2.2<- rbind(PBR,R2N.2A2)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r2n.2a2.2)
+  
+R2N.2C4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.2C4)
+name <- rep("R2N.2C4",nrow(R2N.2C4))
+R2N.2C4 <- cbind(R2N.2C4,name)
+R2N.2C4 <- na.omit(R2N.2C4)
+colnames(R2N.2C4) <- c("-2AP fluorescence","colony")
+r2n.2c4.2<- rbind(PBR,R2N.2C4)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r2n.2c4.2)
+  
+R6N.1A3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R6N.1A3)
+name <- rep("R6N.1A3",nrow(R6N.1A3))
+R6N.1A3 <- cbind(R6N.1A3,name)
+R6N.1A3 <- na.omit(R6N.1A3)
+colnames(R6N.1A3) <- c("-2AP fluorescence","colony")
+r6n.1a3.2<- rbind(PBR,R6N.1A3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r6n.1a3.2)
+
+R6N.1B3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R6N.1B3)
+name <- rep("R6N.1B3",nrow(R6N.1B3))
+R6N.1B3 <- cbind(R6N.1B3,name)
+R6N.1B3 <- na.omit(R6N.1B3)
+colnames(R6N.1B3) <- c("-2AP fluorescence","colony")
+r6n.1b3.2<- rbind(PBR,R6N.1B3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r6n.1b3.2)
+  
+R7N.1C1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.1C1)
+name <- rep("R7N.1C1",nrow(R7N.1C1))
+R7N.1C1 <- cbind(R7N.1C1,name)
+R7N.1C1 <- na.omit(R7N.1C1)
+colnames(R7N.1C1) <- c("-2AP fluorescence","colony")
+r7n.1c1.2<- rbind(PBR,R7N.1C1)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r7n.1c1.2)
+  
+R7N.2B4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.2B4)
+name <- rep("R7N.2B4",nrow(R7N.2B4))
+R7N.2B4 <- cbind(R7N.2B4,name)
+R7N.2B4 <- na.omit(R7N.2B4)
+colnames(R7N.2B4) <- c("-2AP fluorescence","colony")
+r7n.2b4.2<- rbind(PBR,R7N.2B4)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r7n.2b4.2)
+
+R8N.1A1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R8N.1A1)
+name <- rep("R8N.1A1",nrow(R8N.1A1))
+R8N.1A1 <- cbind(R8N.1A1,name)
+R8N.1A1 <- na.omit(R8N.1A1)
+colnames(R8N.1A1) <- c("-2AP fluorescence","colony")
+r8n.1a1.2<- rbind(PBR,R8N.1A1)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r8n.1a1.2)
+
+R8N.1A3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R8N.1A3)
+name <- rep("R8N.1A3",nrow(R8N.1A3))
+R8N.1A3 <- cbind(R8N.1A3,name)
+R8N.1A3 <- na.omit(R8N.1A3)
+colnames(R8N.1A3) <- c("-2AP fluorescence","colony")
+r8n.1a3.2<- rbind(PBR,R8N.1A3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r8n.1a3.2)
+  
+
+R8N.1B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R8N.1B1)
+name <- rep("R8N.1B1",nrow(R8N.1B1))
+R8N.1B1 <- cbind(R8N.1B1,name)
+R8N.1B1 <- na.omit(R8N.1B1)
+colnames(R8N.1B1) <- c("-2AP fluorescence","colony")
+r8n.1b1.2<- rbind(PBR,R8N.1B1)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r8n.1b1.2)
+
+R9N.1C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R9N.1C3)
+name <- rep("R9N.1C3",nrow(R9N.1C3))
+R9N.1C3 <- cbind(R9N.1C3,name)
+R9N.1C3 <- na.omit(R9N.1C3)
+colnames(R9N.1C3) <- c("-2AP fluorescence","colony")
+r9n.1c3.2<- rbind(PBR,R9N.1C3)
+
+  t.test(`-2AP fluorescence` ~ colony, data=r9n.1c3.2)
+
+TOPBIN_NOTCORR_DF <- rbind(PBR,NH5,R10N.1B1,R3N.2D4,R10N.2B2,R10N.2C3,R2N.2A2,R2N.1D1,R7N.1C1,R8N.1A3,R10N.1C2,R6N.1B3,R6N.1A3,R1N.3C1,R9N.1C3,R8N.1A1,R7N.2B4,R8N.1B1)
+
+  ggplot(TOPBIN_NOTCORR_DF, aes(x=`colony`,`-2AP fluorescence`, color=`colony`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+#mid bin box plot
+```{r}
+#PBR and NH5 already made
+R2N.1D4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.1D4)
+name <- rep("R2N.1D4",nrow(R2N.1D4))
+R2N.1D4 <- cbind(R2N.1D4,name)
+R2N.1D4 <- na.omit(R2N.1D4)
+colnames(R2N.1D4) <- c("-2AP fluorescence","colony")
+r2n.1d4.2<- rbind(PBR,R2N.1D4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.1d4.2)
+ 
+R2N.1C4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.1C4)
+name <- rep("R2N.1C4",nrow(R2N.1C4))
+R2N.1C4 <- cbind(R2N.1C4,name)
+R2N.1C4 <- na.omit(R2N.1C4)
+colnames(R2N.1C4) <- c("-2AP fluorescence","colony")
+r2n.1c4.2<- rbind(PBR,R2N.1C4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.1c4.2)
+ 
+R2N.2C4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.2C4)
+name <- rep("R2N.2C4",nrow(R2N.2C4))
+R2N.2C4 <- cbind(R2N.2C4,name)
+R2N.2C4 <- na.omit(R2N.2C4)
+colnames(R2N.2C4) <- c("-2AP fluorescence","colony")
+r2n.2c4.2<- rbind(PBR,R2N.2C4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.2c4.2)
+ 
+R2N.2D2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.2D2)
+name <- rep("R2N.2D2",nrow(R2N.2D2))
+R2N.2D2 <- cbind(R2N.2D2,name)
+R2N.2D2 <- na.omit(R2N.2D2)
+colnames(R2N.2D2) <- c("-2AP fluorescence","colony")
+r2n.2d2.2<- rbind(PBR,R2N.2D2)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.2d2.2)
+ 
+R7N.1B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.1B1)
+name <- rep("R7N.1B1",nrow(R7N.1B1))
+R7N.1B1 <- cbind(R7N.1B1,name)
+R7N.1B1 <- na.omit(R7N.1B1)
+colnames(R7N.1B1) <- c("-2AP fluorescence","colony")
+r7n.1b1.2<- rbind(PBR,R7N.1B1)
+ t.test(`-2AP fluorescence` ~ colony, data=r7n.1b1.2)
+ 
+R1N.4C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R1N.4C3)
+name <- rep("R1N.4C3",nrow(R1N.4C3))
+R1N.4C3 <- cbind(R1N.4C3,name)
+R1N.4C3 <- na.omit(R1N.4C3)
+colnames(R1N.4C3) <- c("-2AP fluorescence","colony")
+r1n.4c3.2<- rbind(PBR,R1N.4C3)
+ t.test(`-2AP fluorescence` ~ colony, data=r1n.4c3.2)
+ 
+R9N.1B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R9N.1B1)
+name <- rep("R9N.1B1",nrow(R9N.1B1))
+R9N.1B1 <- cbind(R9N.1B1,name)
+R9N.1B1 <- na.omit(R9N.1B1)
+colnames(R9N.1B1) <- c("-2AP fluorescence","colony")
+r9n.1b1.2<- rbind(PBR,R9N.1B1)
+ t.test(`-2AP fluorescence` ~ colony, data=r9n.1b1.2)
+ 
+R8N.1D2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R8N.1D2)
+name <- rep("R8N.1D2",nrow(R8N.1D2))
+R8N.1D2 <- cbind(R8N.1D2,name)
+R8N.1D2 <- na.omit(R8N.1D2)
+colnames(R8N.1D2) <- c("-2AP fluorescence","colony")
+r8n.1d2.2<- rbind(PBR,R8N.1D2)
+ t.test(`-2AP fluorescence` ~ colony, data=r8n.1d2.2)
+ 
+R3N.2C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.2C2)
+name <- rep("R3N.2C2",nrow(R3N.2C2))
+R3N.2C2 <- cbind(R3N.2C2,name)
+R3N.2C2 <- na.omit(R3N.2C2)
+colnames(R3N.2C2) <- c("-2AP fluorescence","colony")
+r3n.2c2.2<- rbind(PBR,R3N.2C2)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.2c2.2)
+ 
+R2N.4D1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.4D1)
+name <- rep("R2N.4D1",nrow(R2N.4D1))
+R2N.4D1 <- cbind(R2N.4D1,name)
+R2N.4D1 <- na.omit(R2N.4D1)
+colnames(R2N.4D1) <- c("-2AP fluorescence","colony")
+r2n.4d1.2<- rbind(PBR,R2N.4D1)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.4d1.2)
+ 
+R9N.2A1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R9N.2A1)
+name <- rep("R9N.2A1",nrow(R9N.2A1))
+R9N.2A1 <- cbind(R9N.2A1,name)
+R9N.2A1 <- na.omit(R9N.2A1)
+colnames(R9N.2A1) <- c("-2AP fluorescence","colony")
+r9n.2a1.2<- rbind(PBR,R9N.2A1)
+ t.test(`-2AP fluorescence` ~ colony, data=r9n.2a1.2)
+ 
+R2N.3A1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.3A1)
+name <- rep("R2N.3A1",nrow(R2N.3A1))
+R2N.3A1 <- cbind(R2N.3A1,name)
+R2N.3A1 <- na.omit(R2N.3A1)
+colnames(R2N.3A1) <- c("-2AP fluorescence","colony")
+r2n.3a1.2<- rbind(PBR,R2N.3A1)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.3a1.2)
+ 
+R3N.1C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.1C3)
+name <- rep("R3N.1C3",nrow(R3N.1C3))
+R3N.1C3 <- cbind(R3N.1C3,name)
+R3N.1C3 <- na.omit(R3N.1C3)
+colnames(R3N.1C3) <- c("-2AP fluorescence","colony")
+r3n.1c3.2<- rbind(PBR,R3N.1C3)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.1c3.2)
+ 
+R2N.4C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.4C2)
+name <- rep("R2N.4C2",nrow(R2N.4C2))
+R2N.4C2 <- cbind(R2N.4C2,name)
+R2N.4C2 <- na.omit(R2N.4C2)
+colnames(R2N.4C2) <- c("-2AP fluorescence","colony")
+r2n.4C2.2<- rbind(PBR,R2N.4C2)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.4C2.2)
+ 
+R3N.1B2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.1B2)
+name <- rep("R3N.1B2",nrow(R3N.1B2))
+R3N.1B2 <- cbind(R3N.1B2,name)
+R3N.1B2 <- na.omit(R3N.1B2)
+colnames(R3N.1B2) <- c("-2AP fluorescence","colony")
+r3n.1b2.2<- rbind(PBR,R3N.1B2)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.1b2.2) 
+ 
+R10N.2B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R10N.2B1)
+name <- rep("R10N.2B1",nrow(R10N.2B1))
+R10N.2B1 <- cbind(R10N.2B1,name)
+R10N.2B1 <- na.omit(R10N.2B1)
+colnames(R10N.2B1) <- c("-2AP fluorescence","colony")
+r10n.2b1.2<- rbind(PBR,R10N.2B1)
+ t.test(`-2AP fluorescence` ~ colony, data=r10n.2b1.2) 
+ 
+R3N.3D3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.3D3)
+name <- rep("R3N.3D3",nrow(R3N.3D3))
+R3N.3D3 <- cbind(R3N.3D3,name)
+R3N.3D3 <- na.omit(R3N.3D3)
+colnames(R3N.3D3) <- c("-2AP fluorescence","colony")
+r3n.3d3.2<- rbind(PBR,R3N.3D3)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.3d3.2) 
+ 
+R4N.1D4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R4N.1D4)
+name <- rep("R4N.1D4",nrow(R4N.1D4))
+R4N.1D4 <- cbind(R4N.1D4,name)
+R4N.1D4 <- na.omit(R4N.1D4)
+colnames(R4N.1D4) <- c("-2AP fluorescence","colony")
+r4n.1d4.2<- rbind(PBR,R4N.1D4)
+ t.test(`-2AP fluorescence` ~ colony, data=r4n.1d4.2) 
+ 
+R8N.1C4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R8N.1C4)
+name <- rep("R8N.1C4",nrow(R8N.1C4))
+R8N.1C4 <- cbind(R8N.1C4,name)
+R8N.1C4 <- na.omit(R8N.1C4)
+colnames(R8N.1C4) <- c("-2AP fluorescence","colony")
+r8n.1c4.2<- rbind(PBR,R8N.1C4)
+ t.test(`-2AP fluorescence` ~ colony, data=r8n.1c4.2) 
+ 
+R1N.4D1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R1N.4D1)
+name <- rep("R1N.4D1",nrow(R1N.4D1))
+R1N.4D1 <- cbind(R1N.4D1,name)
+R1N.4D1 <- na.omit(R1N.4D1)
+colnames(R1N.4D1) <- c("-2AP fluorescence","colony")
+r1n.4d1.2<- rbind(PBR,R1N.4D1)
+ t.test(`-2AP fluorescence` ~ colony, data=r1n.4d1.2) 
+ 
+R2N.4C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.4C3)
+name <- rep("R2N.4C3",nrow(R2N.4C3))
+R2N.4C3 <- cbind(R2N.4C3,name)
+R2N.4C3 <- na.omit(R2N.4C3)
+colnames(R2N.4C3) <- c("-2AP fluorescence","colony")
+r2n.4c3.2<- rbind(PBR,R2N.4C3)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.4c3.2)
+ 
+R4N.2A4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R4N.2A4)
+name <- rep("R4N.2A4",nrow(R4N.2A4))
+R4N.2A4 <- cbind(R4N.2A4,name)
+R4N.2A4 <- na.omit(R4N.2A4)
+colnames(R4N.2A4) <- c("-2AP fluorescence","colony")
+r2n.2a4.2<- rbind(PBR,R4N.2A4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.2a4.2) 
+ 
+R7N.1A2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.1A2)
+name <- rep("R7N.1A2",nrow(R7N.1A2))
+R7N.1A2 <- cbind(R7N.1A2,name)
+v <- na.omit(R7N.1A2)
+colnames(R7N.1A2) <- c("-2AP fluorescence","colony")
+r7n.1a2.2<- rbind(PBR,R7N.1A2)
+ t.test(`-2AP fluorescence` ~ colony, data=r7n.1a2.2) 
+ 
+R1N.3B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R1N.3B1)
+name <- rep("R1N.3B1",nrow(R1N.3B1))
+R1N.3B1 <- cbind(R1N.3B1,name)
+R1N.3B1 <- na.omit(R1N.3B1)
+colnames(R1N.3B1) <- c("-2AP fluorescence","colony")
+r1n.3b1.2<- rbind(PBR,R1N.3B1)
+ t.test(`-2AP fluorescence` ~ colony, data=r1n.3b1.2)
+ 
+R2N.2D4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.2D4)
+name <- rep("R2N.2D4",nrow(R2N.2D4))
+R2N.2D4 <- cbind(R2N.2D4,name)
+R2N.2D4 <- na.omit(R2N.2D4)
+colnames(R2N.2D4) <- c("-2AP fluorescence","colony")
+r2n.2d4.2<- rbind(PBR,R2N.2D4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.2d4.2)
+ 
+R6N.1C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R6N.1C2)
+name <- rep("R6N.1C2",nrow(R6N.1C2))
+R6N.1C2 <- cbind(R6N.1C2,name)
+R6N.1C2 <- na.omit(R6N.1C2)
+colnames(R6N.1C2) <- c("-2AP fluorescence","colony")
+r6n.1c2.2<- rbind(PBR,R6N.1C2)
+ t.test(`-2AP fluorescence` ~ colony, data=r6n.1c2.2)
+ 
+R7N.1B3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.1B3)
+name <- rep("R7N.1B3",nrow(R7N.1B3))
+R7N.1B3 <- cbind(R7N.1B3,name)
+R7N.1B3 <- na.omit(R7N.1B3)
+colnames(R7N.1B3) <- c("-2AP fluorescence","colony")
+r7n.1b3.2<- rbind(PBR,R7N.1B3)
+ t.test(`-2AP fluorescence` ~ colony, data=r7n.1b3.2)
+ 
+R3N.1B3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.1B3)
+name <- rep("R3N.1B3",nrow(R3N.1B3))
+R3N.1B3 <- cbind(R3N.1B3,name)
+R3N.1B3 <- na.omit(R3N.1B3)
+colnames(R3N.1B3) <- c("-2AP fluorescence","colony")
+r3n.1b3.2<- rbind(PBR,R3N.1B3)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.1b3.2)
+ 
+R7N.2A2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.2A2)
+name <- rep("R7N.2A2",nrow(R7N.2A2))
+R7N.2A2 <- cbind(R7N.2A2,name)
+R7N.2A2 <- na.omit(R7N.2A2)
+colnames(R7N.2A2) <- c("-2AP fluorescence","colony")
+r7n.2a2.2<- rbind(PBR,R7N.2A2)
+ t.test(`-2AP fluorescence` ~ colony, data=r7n.2a2.2)
+ 
+R2N.3C4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.3C4)
+name <- rep("R2N.3C4",nrow(R2N.3C4))
+R2N.3C4 <- cbind(R2N.3C4,name)
+R2N.3C4 <- na.omit(R2N.3C4)
+colnames(R2N.3C4) <- c("-2AP fluorescence","colony")
+r2n.3c4.2<- rbind(PBR,R2N.3C4)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.3c4.2)
+ 
+R2N.3D2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.3D2)
+name <- rep("R2N.3D2",nrow(R2N.3D2))
+R2N.3D2 <- cbind(R2N.3D2,name)
+R2N.3D2 <- na.omit(R2N.3D2)
+colnames(R2N.3D2) <- c("-2AP fluorescence","colony")
+r2n.3d2.2<- rbind(PBR,R2N.3D2)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.3d2.2)
+ 
+R3N.3B1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R3N.3B1)
+name <- rep("R3N.3B1",nrow(R3N.3B1))
+R3N.3B1 <- cbind(R3N.3B1,name)
+R3N.3B1 <- na.omit(R3N.3B1)
+colnames(R3N.3B1) <- c("-2AP fluorescence","colony")
+r3n.3b1.2<- rbind(PBR,R3N.3B1)
+ t.test(`-2AP fluorescence` ~ colony, data=r3n.3b1.2)
+ 
+R2N.3C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.3C3)
+name <- rep("R2N.3C3",nrow(R2N.3C3))
+R2N.3C3 <- cbind(R2N.3C3,name)
+R2N.3C3 <- na.omit(R2N.3C3)
+colnames(R2N.3C3) <- c("-2AP fluorescence","colony")
+r2n.3c3.2<- rbind(PBR,R2N.3C3)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.3c3.2)
+ 
+R2N.4A1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R2N.4A1)
+name <- rep("R2N.4A1",nrow(R2N.4A1))
+R2N.4A1 <- cbind(R2N.4A1,name)
+R2N.4A1 <- na.omit(R2N.4A1)
+colnames(R2N.4A1) <- c("-2AP fluorescence","colony")
+r2n.4a1.2<- rbind(PBR,R2N.4A1)
+ t.test(`-2AP fluorescence` ~ colony, data=r2n.4a1.2) 
+ 
+R4N.1C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R4N.1C2)
+name <- rep("R4N.1C2",nrow(R4N.1C2))
+R4N.1C2 <- cbind(R4N.1C2,name)
+R4N.1C2 <- na.omit(R4N.1C2)
+colnames(R4N.1C2) <- c("-2AP fluorescence","colony")
+r4n.1c2.2<- rbind(PBR,R4N.1C2)
+ t.test(`-2AP fluorescence` ~ colony, data=r4n.1c2.2) 
+ 
+R5N.2D4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R5N.2D4)
+name <- rep("R5N.2D4",nrow(R5N.2D4))
+R5N.2D4 <- cbind(R5N.2D4,name)
+R5N.2D4 <- na.omit(R5N.2D4)
+colnames(R5N.2D4) <- c("-2AP fluorescence","colony")
+r5n.2d4.2<- rbind(PBR,R5N.2D4)
+ t.test(`-2AP fluorescence` ~ colony, data=r5n.2d4.2) 
+ 
+R6N.2C2 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R6N.2C2)
+name <- rep("R6N.2C2",nrow(R6N.2C2))
+R6N.2C2 <- cbind(R6N.2C2,name)
+R6N.2C2 <- na.omit(R6N.2C2)
+colnames(R6N.2C2) <- c("-2AP fluorescence","colony")
+r6n.2c2.2<- rbind(PBR,R6N.2C2)
+ t.test(`-2AP fluorescence` ~ colony, data=r6n.2c2.2) 
+ 
+R4N.2D1 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R4N.2D1)
+name <- rep("R4N.2D1",nrow(R4N.2D1))
+R4N.2D1 <- cbind(R4N.2D1,name)
+R4N.2D1 <- na.omit(R4N.2D1)
+colnames(R4N.2D1) <- c("-2AP fluorescence","colony")
+r4n.2d1.2<- rbind(PBR,R4N.2D1)
+ t.test(`-2AP fluorescence` ~ colony, data=r4n.2d1.2) 
+ 
+R7N.1C3 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R7N.1C3)
+name <- rep("R7N.1C3",nrow(R7N.1C3))
+R7N.1C3 <- cbind(R7N.1C3,name)
+R7N.1C3 <- na.omit(R7N.1C3)
+colnames(R7N.1C3) <- c("-2AP fluorescence","colony")
+r7n.1c3.2<- rbind(PBR,R7N.1C3)
+ t.test(`-2AP fluorescence` ~ colony, data=r7n.1c3.2)
+ 
+R9N.2A4 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$R9N.2A4)
+name <- rep("R9N.2A4",nrow(R9N.2A4))
+R9N.2A4 <- cbind(R9N.2A4,name)
+R9N.2A4 <- na.omit(R9N.2A4)
+colnames(R9N.2A4) <- c("-2AP fluorescence","colony")
+r9n.2a4.2<- rbind(PBR,R9N.2A4)
+ t.test(`-2AP fluorescence` ~ colony, data=r9n.2a4.2)
+ 
+MIDBIN_NOTCORR_DF <- rbind(PBR,NH5,R2N.1D4, R2N.1C4, R2N.2C4,R2N.2D2,R7N.1B1,R1N.4C3,R9N.1B1,R8N.1D2,R3N.2C2,R2N.4D1,R9N.2A1,R2N.3A1,R3N.1C3,R2N.4C2,R3N.1B2,R10N.2B1,R3N.3D3,R4N.1D4,R8N.1C4,R1N.4D1,R2N.4C3,R4N.2A4,R7N.1A2,R1N.3B1,R2N.2D4,R6N.1C2,R7N.1B3,R3N.1B3,R7N.2A2,R2N.3C4,R2N.3D2,R3N.3B1,R2N.3C3,R2N.4A1,R4N.1C2,R5N.2D4,R6N.2C2,R4N.2D1,R7N.1C3,R9N.2A4)
+
+  ggplot(MIDBIN_NOTCORR_DF, aes(x=`colony`,`-2AP fluorescence`, color=`colony`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ```
 
 ```{r}
