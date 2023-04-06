@@ -306,7 +306,13 @@ name <- rep("R3N.2D4",nrow(R3N.2D4))
 R3N.2D4 <- cbind(R3N.2D4,name)
 R3N.2D4 <- na.omit(R3N.2D4)
 colnames(R3N.2D4) <- c("-2AP fluorescence","colony")
-neg_df_rep <- rbind(PBR,R10N.1B1, R3N.2D4)
+NH5 <- as.data.frame(noOut_NOTCORRn6p4stem_minus$NH5)
+name <- rep("NH5",nrow(NH5))
+NH5 <- cbind(NH5,name)
+NH5 <- na.omit(NH5)
+colnames(NH5) <- c("-2AP fluorescence","colony")
+
+neg_df_rep <- rbind(PBR,R10N.1B1, R3N.2D4,NH5)
 
 ggplot(neg_df_rep, aes(x=`colony`,`-2AP fluorescence`, color=`colony`)) + 
   geom_jitter(shape=16, position=position_jitter(0.2)) +
@@ -328,4 +334,17 @@ R2d4 <- neg_df_rep %>%
   filter(colony != "R10N.1B1")
 
   t.test(`-2AP fluorescence` ~ colony, data=R2d4)
+ 
+NH5 <- neg_df_rep %>%
+  filter(colony != c("R10N.1B1", "R3.N2D4"))
+
+  t.test(`-2AP fluorescence` ~ colony, data=R2d4)
+   
 ```
+
+```{r}
+ggplot(noOut_NH5_n6p4stem_minus, aes()) + 
+  geom_jitter(shape=1, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  theme(legend.position="none")
+  ```
