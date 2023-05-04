@@ -16,6 +16,7 @@ library(tibble)
 library(ggsignif)
 library(plotrix)
 library(openxlsx)
+library(viridis)
 ```
 
 ## Creating the function to remove outliers based on Interquartile range
@@ -191,9 +192,19 @@ allinfoloop$bin[allinfoloop$binvalue==11] <- "mid"
 allinfoloop$bin[allinfoloop$binvalue==6] <- "bottom"
 #name NH5
 allinfoloop["NH5","bin"] <- "NH5"
-ggplot(allinfoloop, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+#bins2 <- allinfoloop$bin
+#allinfoloop <- cbind(allinfoloop,bins2)
+#allinfoloop$bin <- ordered(c("mid","top","NH5"))
+allinfoloop$isNH5 = 3
+allinfoloop["NH5","isNH5"] <- 50
+
+allinfoloop$bin <- as.factor(allinfoloop$bin)
+ggplot(allinfoloop, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=3, alpha=allinfoloop$isNH5, show.legend = FALSE)+
   labs(title="Loop Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
-  theme_minimal()
+  theme_minimal() 
+
+plot(corr_minus_2AP ~ bin, data = allinfoloop)
+table(allinfoloop$bin)
 write.xlsx(allinfoloop, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/loop/loop_binning.xlsx', rowNames = TRUE)
 write.csv(allinfoloop, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/loop/loop_binning.csv', row.names = TRUE)
 ```

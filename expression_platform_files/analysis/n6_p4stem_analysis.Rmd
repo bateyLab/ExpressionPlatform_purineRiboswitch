@@ -170,7 +170,7 @@ write.xlsx(raw_summary_table, '~/Downloads/Expression_platform_project/expressio
 ```
 
 ##Analysis of colonies that were close to pbr322 
-
+```{r}
 R10N.1B1 <- as.data.frame(noOut_NH5_n6p4stem_minus$R10N.1B1)
 name <- rep("R10N.1B1",nrow(R10N.1B1))
 R10N.1B1 <- cbind(R10N.1B1,name)
@@ -200,7 +200,7 @@ with(neg_df_rep, shapiro.test(`-2AP fluorescence`[colony == "R3N.2D4"]))
 res.ftest <- var.test(`-2AP fluorescence` ~ colony, data = neg_df_rep)
 res.ftest
 #p values is less than 0.05 so we cannot use standard t-test
-
+```
 #binning by REP
 ```{r}
 REPbins <- N6P4STEM_all_summary_table_noGFP
@@ -252,7 +252,7 @@ allinformation$bin[allinformation$binvalue==11] <- "mid"
 allinformation$bin[allinformation$binvalue==6] <- "bottom"
 #name NH5
 allinformation["NH5","bin"] <- "NH5"
-ggplot(allinformation, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+ggplot(allinformation, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2.5, alpha=1, show.legend = FALSE)+
   labs(title="N=6 P4 Stem Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinformation, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/n6_P4stem/n6p4stem_binning.xlsx', rowNames = TRUE)
@@ -484,7 +484,7 @@ r9n.1c3.2<- rbind(PBR,R9N.1C3)
 
   t.test(`-2AP fluorescence` ~ colony, data=r9n.1c3.2)
 
-TOPBIN_NOTCORR_DF <- rbind(PBR,NH5,R10N.1B1,R3N.2D4,R10N.2B2,R10N.2C3,R2N.2A2,R2N.1D1,R7N.1C1,R8N.1A3,R10N.1C2,R6N.1B3,R6N.1A3,R1N.3C1,R9N.1C3,R8N.1A1,R7N.2B4,R8N.1B1)
+TOPBIN_NOTCORR_DF <- rbind(PBR,NH5,R10N.1B1,R3N.2D4,R10N.2B2,R10N.2C3,R2N.2A2,R2N.1D1,R7N.1C1,R8N.1A3,R10N.1C2,R6N.1B3,R6N.1A3,R1N.3C1,R9N.1C3,R8N.1A1,R7N.2B4,R8N.1B1,R1N.4C3,R2N.2C4)
 
   ggplot(TOPBIN_NOTCORR_DF, aes(x=`colony`,`-2AP fluorescence`, color=`colony`)) + 
   geom_jitter(shape=16, position=position_jitter(0.2)) +

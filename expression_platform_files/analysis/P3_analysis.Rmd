@@ -190,7 +190,7 @@ allinfoP3$bin[allinfoP3$binvalue==11] <- "mid"
 allinfoP3$bin[allinfoP3$binvalue==6] <- "bottom"
 #name NH5
 allinfoP3["NH5","bin"] <- "NH5"
-ggplot(allinfoP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+ggplot(allinfoP3, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=4, alpha=1, show.legend = FALSE)+
   labs(title="P3 Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoP3, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P3/P3_binning.xlsx', rowNames = TRUE)

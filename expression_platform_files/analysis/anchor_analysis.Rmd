@@ -173,8 +173,8 @@ FIbadbinanchor <- FIbinsanchor %>%
 FIbinanchor <- rep(5,nrow(FIbadbinanchor))
 FIbadbinanchor <- cbind(FIbadbinanchor,FIbinanchor)
 FIallbinsanchor <- rbind(FIbadbinanchor,FIgoodbinanchor)
-ggplot(FIallbinsanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinanchor))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
-  labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+ggplot(FIallbinsanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=FIbinanchor))+ geom_point(size=2.5, alpha=1, show.legend = FALSE)+
+  labs(title="Anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 tryFIallbinsanchor <- FIallbinsanchor[order(row.names(FIallbinsanchor)),]
 ```
@@ -190,8 +190,8 @@ allinfoanchor$bin[allinfoanchor$binvalue==11] <- "mid"
 allinfoanchor$bin[allinfoanchor$binvalue==6] <- "bottom"
 #name NH5
 allinfoanchor["NH5","bin"] <- "NH5"
-ggplot(allinfoanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
-  labs(title="anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+ggplot(allinfoanchor, aes(x=`corr_minus_2AP`, y=`corr_FI`, color=bin))+ geom_point(size=4, alpha=1, show.legend = FALSE)+
+  labs(title="Anchor Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
   theme_minimal()
 write.xlsx(allinfoanchor, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_binning.xlsx', rowNames = TRUE)
 write.csv(allinfoanchor,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/anchor/anchor_binning.csv", row.names = TRUE)
