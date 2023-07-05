@@ -1,0 +1,178 @@
+---
+title: "directed_mutants"
+output: html_document
+date: '2023-06-07'
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+library(ggsignif)
+library(plotrix)
+library(openxlsx)
+```
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+ Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #finds the 25th and 75th percentile of the distribution, excluding NAs
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #difference between 75th and 25th quartile=interquartile range
+ upperBound <- Q[2]+bounds*iqr
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be varied by changing bound
+ lowerBound <- Q[1]-bounds*iqr
+ #upper bound of the values is 25th quartile - 1.5*(interquartile range)
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #take out the values that are outside of the established bounds note: that 1.5 can be varied by changing bound
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ return(noteliminatedvalues)
+ #return those values which will be included that are between the upper and lower bounds 
+}
+```
+
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence (PBR322) corrected fluorescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the directed_mutants, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when read into R. 
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+```{r}
+#read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
+directed_mutants <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/directed_mutants.csv", header=T)
+empty_columns <- sapply(directed_mutants, function(x) all(is.na(x) | x==""))
+directed_mutants <- directed_mutants[,!empty_columns]
+directed_mutants[directed_mutants == -2] <-NA
+#MINUS 2AP DF
+directed_mutants_minus <- directed_mutants[directed_mutants == "(-)",]
+#PLUS 2AP DF
+directed_mutants_plus <- directed_mutants[directed_mutants == "(+)",]
+#remove rows that were only NA 
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for minus
+```{r}
+noOut_directed_mutants_minus.list <- apply(directed_mutants_minus[,2:ncol(directed_mutants_minus)], 2, removeOut, na.rm=TRUE)
+#noOut_directed_mutants_minus.list <- split(noOut_directed_mutants_minus.list, seq(ncol(noOut_directed_mutants_minus.list)))
+#names(noOut_directed_mutants_minus.list) <- c("NH5","NH5_PROX_AU","NH5_DIST_AU","NH5_Cminus1_A")
+#this used the function made to identify and remove outliers 
+noOut_directed_mutants_minus_sideways <- plyr::ldply(noOut_directed_mutants_minus.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_directed_mutants_minus <- data.frame(t(noOut_directed_mutants_minus_sideways[-1]))
+colnames(noOut_directed_mutants_minus) <- noOut_directed_mutants_minus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+directed_mutants_minus_noOut_wideform <- cbind(directed_mutants_minus[1:nrow(noOut_directed_mutants_minus),1], noOut_directed_mutants_minus[,1:ncol(noOut_directed_mutants_minus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(directed_mutants_minus_noOut_wideform)[1] <- "COLONY"
+#rename the first column 
+long_directed_mutants_minus <- gather(directed_mutants_minus_noOut_wideform, Colony_Name, Fluorescence, -COLONY)
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form for plus
+```{r}
+
+noOut_directed_mutants_plus.list <- apply(directed_mutants_plus[,2:ncol(directed_mutants_plus)], 2, removeOut, na.rm=TRUE)
+#this used the function made to identify and remove outliers 
+noOut_directed_mutants_plus_sideways <- plyr::ldply(noOut_directed_mutants_plus.list, rbind)
+#took the list created from the applying the removeOut function and made it into a dataframe 
+noOut_directed_mutants_plus <- data.frame(t(noOut_directed_mutants_plus_sideways[-1]))
+colnames(noOut_directed_mutants_plus) <- noOut_directed_mutants_plus_sideways[,1]
+#rotate the dataframe created by the function to prepare it for converting to long form 
+directed_mutants_plus_noOut_wideform <- cbind(directed_mutants_plus[1:nrow(noOut_directed_mutants_plus),1], noOut_directed_mutants_plus[,1:ncol(noOut_directed_mutants_plus)])
+#replaces id column with COLONY column which identified the value as (-) or (+)
+colnames(directed_mutants_plus_noOut_wideform)[1] <- "COLONY"
+#rename the first column 
+long_directed_mutants_plus <- gather(directed_mutants_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONY)
+```
+
+##Make DF of medians of each after removal of outliers 
+```{r}
+#median DFs
+#mediangateway_FI<- as.data.frame(apply(noOut_NH5_gateway_FI, 2, median, na.rm=TRUE))
+mediandirected_mutants_minus<- as.data.frame(apply(noOut_directed_mutants_minus, 2, median, na.rm=TRUE))
+mediandirected_mutants_plus<- as.data.frame(apply(directed_mutants_plus[,2:ncol(directed_mutants_plus)], 2, median, na.rm=TRUE))
+#standard error DFs for minus and plus
+SE_directed_mutants_minus <- std.error(noOut_directed_mutants_minus)
+SE_directed_mutants_plus <- std.error(directed_mutants_plus[,2:ncol(directed_mutants_plus)])
+#create one data frame that has medians and standard errors
+directed_mutants_summary_table <- cbind.data.frame(mediandirected_mutants_minus, SE_directed_mutants_minus, mediandirected_mutants_plus, SE_directed_mutants_plus)
+
+#rename column names
+colnames(directed_mutants_summary_table) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE")
+#make FI
+directed_mutants_summary_table$FI <- directed_mutants_summary_table$`+2AP` / directed_mutants_summary_table$`-2AP`
+#divide values by NH5
+directed_mutants_summary_table$corr_minus_2AP <- as.numeric(directed_mutants_summary_table$'-2AP')/directed_mutants_summary_table[c("NH5"),c("-2AP")]
+directed_mutants_summary_table$corr_plus_2AP <- as.numeric(directed_mutants_summary_table$'+2AP')/directed_mutants_summary_table[c("NH5"),c("+2AP")]
+directed_mutants_summary_table$corr_FI <- as.numeric(directed_mutants_summary_table$FI)/directed_mutants_summary_table[c("NH5"),c("FI")]
+
+#the measurements should have 2 sig figs and the standards errors should have 1 sig fig
+two_sf_cols <- c(1,3,5,6,7,8)
+one_sf_cols <- c(2,4)
+directed_mutants_summary_table[,two_sf_cols] <- signif(directed_mutants_summary_table[,two_sf_cols],2)
+directed_mutants_summary_table[,one_sf_cols] <- signif(directed_mutants_summary_table[,one_sf_cols],1)
+
+#write csv
+write.csv(directed_mutants_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/directed_mutants/directed_mutants_summary_table.csv", row.names = TRUE)
+
+#write excel
+write.xlsx(directed_mutants_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/directed_mutants/directed_mutants_summary_table.xlsx', rowNames = TRUE)
+#remove GFPUV
+ggplot(directed_mutants_summary_table, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="directed_mutants Repression vs Activity", x="Repression", y="Fold Induction")+
+  theme_minimal()
+
+
+ggplot(long_directed_mutants_minus, aes(x=`Colony_Name`,y=`Fluorescence`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot(color="red", fill="orange", alpha=0.2) +
+  labs(title="directed_mutants Repression (-2AP)", x="Colony", y="Repression")+
+  theme(legend.position="none")
+
+ggplot(long_directed_mutants_plus, aes(x=`Colony_Name`,y=`Fluorescence`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot(color="red", fill="orange", alpha=0.2) +
+   labs(title="directed_mutants Expression (+2AP)", x="Colony", y="Expression")+
+  theme(legend.position="none")
+```
+
+```{r}
+long_plot <- rbind(long_directed_mutants_minus,long_directed_mutants_plus)
+long_plot <- subset(long_plot,is.na(Fluorescence)==FALSE)
+#trial <- long_plot[- grep("P4AC.1A", long_plot$Colony_Name),]
+ggplot(long_plot, aes(x=`Colony_Name`,y=`Fluorescence`, color=`COLONY`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  labs(title="directed_mutants Repression and Expression", x="Colony", y="Fluorescence")+
+  theme_minimal()
+ggplot(long_plot, aes(x=`Colony_Name`,y=`Fluorescence`, fill=`COLONY`)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  labs(title="directed_mutants Repression and Expression", x="Colony", y="Fluorescence")+
+  theme_minimal()
+ggplot(trial, aes(x=`Colony_Name`,y=`Fluorescence`, color=`COLONY`)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  geom_boxplot() +
+  labs(title="directed_mutants Repression and Expression", x="Colony", y="Fluorescence")+
+  theme_minimal()
+ggplot(trial, aes(x=factor(Colony_Name,level=c('WT','del27_WT','NH5')),y=`Fluorescence`, fill=`COLONY`)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  labs(title="directed_mutants Repression and Expression", x="Colony", y="Fluorescence")+
+  theme_minimal()
+
+
+#playing around
+directed_mutants_wf <- directed_mutants_summary_table
+directed_mutants_wf$Names <- row.names(directed_mutants_summary_table)
+ggplot(directed_mutants_summary_table, aes(x='Names', y=`-2AP`) +
+         geom_bar(stat = "identity") +
+         geom_errorbar(aes(ymin='-2AP'-'-2AP_SE',ymax='-2AP'+'-2AP_SE',))
+)
+```
+
+

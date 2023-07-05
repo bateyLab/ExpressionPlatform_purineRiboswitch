@@ -73,19 +73,27 @@ long_controls_minus <- gather(controls_minus_noOut_wideform, Colony_Name, Fluore
 
 ###Using function to remove outliers and create a new dataframe in wide form and long form for plus
 ```{r}
+#silly <- controls_plus
 
-#noOut_controls_plus <- apply(controls_plus[,2:ncol(controls_plus)], 2, removeOut, na.rm=TRUE)
+#silly.list <- apply(silly[,2:ncol(silly)], 2, removeOut, na.rm=TRUE)
+#reallysilly.list <- split(silly.list, seq(ncol(silly.list)))
+#names(reallysilly.list) <- names(noOut_controls_minus)
+
+noOut_controls_plus.list <- apply(controls_plus[,2:ncol(controls_plus)], 2, removeOut, na.rm=TRUE)
+noOut_controls_plus.list <- split(noOut_controls_plus.list, seq(ncol(noOut_controls_plus.list)))
+names(noOut_controls_plus.list) <- names(noOut_controls_minus)
+#noOut_controls_plus.list <- as.list(noOut_controls_plus.list)
 #this used the function made to identify and remove outliers 
-#noOut_controls_plus_sideways <- plyr::ldply(noOut_controls_plus.list, rbind)
+noOut_controls_plus_sideways <- plyr::ldply(noOut_controls_plus.list, rbind)
 #took the list created from the applying the removeOut function and made it into a dataframe 
-#noOut_controls_plus <- data.frame(t(noOut_controls_plus_sideways[-1]))
-#colnames(noOut_controls_plus) <- noOut_controls_plus_sideways[,1]
+noOut_controls_plus <- data.frame(t(noOut_controls_plus_sideways[-1]))
+colnames(noOut_controls_plus) <- noOut_controls_plus_sideways[,1]
 #rotate the dataframe created by the function to prepare it for converting to long form 
-#controls_plus_noOut_wideform <- cbind(controls_plus[1:nrow(noOut_controls_plus),1], noOut_controls_plus[,1:ncol(noOut_controls_plus)])
+controls_plus_noOut_wideform <- cbind(controls_plus[1:nrow(noOut_controls_plus),1], noOut_controls_plus[,1:ncol(noOut_controls_plus)])
 #replaces id column with COLONY column which identified the value as (-) or (+)
-#colnames(controls_plus_noOut_wideform)[1] <- "COLONY"
+colnames(controls_plus_noOut_wideform)[1] <- "COLONY"
 #rename the first column 
-#long_controls_plus <- gather(controls_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONY)
+long_controls_plus <- gather(controls_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONY)
 
 #CANNOT FIGURE THIS OUT RIGHT NOW, FOR NOW WILL NOT REMOVE OUTLIERS FROM PLUS...WILL FIX LATER
 long_controls_plus <- gather(controls_plus, Colony_Name, Fluorescence, -COLONY) 
@@ -143,5 +151,29 @@ ggplot(long_controls_plus, aes(x=`Colony_Name`,y=`Fluorescence`)) +
   theme(legend.position="none")
 ```
 
+```{r}
+#long_plot <- rbind(long_controls_minus,long_controls_plus)
+#trial <- long_plot[- grep("P4AC.1A", long_plot$Colony_Name),]
+#ggplot(long_plot, aes(x=factor(Colony_Name,level=c('WT','del27_WT','NH5','P4AC.1A')),y=`Fluorescence`, color=`COLONY`)) + 
+#  geom_jitter(shape=16, position=position_jitter(0.2)) +
+#  geom_boxplot() +
+#  labs(title="Controls Repression and Expression", x="Colony", y="Fluorescence")+
+#  theme_minimal()
+#ggplot(long_plot, aes(x=factor(Colony_Name,level=c('WT','del27_WT','NH5','P4AC.1A')),y=`Fluorescence`, fill=`COLONY`)) +
+#  geom_bar(stat="identity", position=position_dodge()) +
+#  labs(title="Controls Repression and Expression", x="Colony", y="Fluorescence")+
+#  theme_minimal()
+#ggplot(trial, aes(x=factor(Colony_Name,level=c('WT','del27_WT','NH5')),y=`Fluorescence`, color=`COLONY`)) + 
+#  geom_jitter(shape=16, position=position_jitter(0.2)) +
+#  geom_boxplot() +
+#  labs(title="Controls Repression and Expression", x="Colony", y="Fluorescence")+
+#  theme_minimal()
+#ggplot(trial, aes(x=factor(Colony_Name,level=c('WT','del27_WT','NH5')),y=`Fluorescence`, fill=`COLONY`)) +
+#  geom_bar(stat="identity", position=position_dodge()) +
+#  labs(title="Controls Repression and Expression", x="Colony", y="Fluorescence")+
+#  theme_minimal()
+
+
+```
 
 

@@ -829,4 +829,15 @@ ggplot(noOut_NH5_n6p4stem_minus, aes()) +
   geom_jitter(shape=1, position=position_jitter(0.2)) +
   geom_boxplot() +
   theme(legend.position="none")
-  ```
+```
+
+```{r}
+barplot <- rbind(long_NH5_n6p4stem_minus,long_NH5_n6p4stem_plus)
+ggplot(barplot, aes(x=Colony_Name,y=`Fluorescence`, fill=`COLONIES`)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  labs(title="directed_mutants Repression and Expression", x="Colony", y="Fluorescence")+
+  theme_minimal()
+```
+  
+  
+  
