@@ -1,0 +1,28 @@
+---
+title: "Kd vs FITC"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+ligand <- c("2,6-diaminopurine","2-aminopurine","2-fluoroadenine","6-methylaminopurine","2,4,6-triaminopyrimidine")
+Kd <- c(0.017,0.25,4,105,20)
+Mean_FITCA <- c(35418.92,66067.26,2612.02,321.04,545.8)
+df <- data.frame(ligand, Kd, Mean_FITCA)
+
+ggplot(df, aes(x=`Kd`, y=`Mean_FITCA`,color="red"))+ geom_point(size=4, alpha=1, show.legend = TRUE)+
+  labs(title="Kd vs FITC-A", x="Kd", y="Mean FITC-A")+
+  theme_minimal()+
+  theme(legend.position="none")
+ggplot(df, aes(x=`Kd`, y=`Mean_FITCA`,color="red"))+ geom_point(size=4, alpha=1, show.legend = TRUE)+
+  labs(title="Kd vs FITC-A", x="Kd", y="Mean FITC-A")+
+  theme_minimal()+
+  scale_x_continuous(trans='log10') +
+  theme(legend.position="none")
+ggplot(df, aes(x=`Kd`, y=`Mean_FITCA`,color="red"))+ geom_point(size=4, alpha=1, show.legend = TRUE)+
+  labs(title="Kd vs FITC-A", x="Kd", y="Mean FITC-A")+
+  theme_minimal()+
+  scale_y_continuous(trans='log10') +
+  theme(legend.position="none")
+```

@@ -37,7 +37,6 @@ removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
  noteliminatedvalues <- distribution[noteliminatedindex]
  #return those values which will be included that are between the upper and lower bounds 
  return(noteliminatedvalues)
- 
 }
 ```
 
@@ -46,7 +45,7 @@ Formatting of csv: each column is a different colony, first row is the name of t
 This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
 ```{r}
 #read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
-L4_all <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/L4_data.csv", header=T)
+L4_all <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/library_data_files/L4_data.csv", header=T)
 empty_columns <- sapply(L4_all, function(x) all(is.na(x) | x==""))
 L4_all <- L4_all[,!empty_columns]
 L4_all[L4_all == -2] <-NA

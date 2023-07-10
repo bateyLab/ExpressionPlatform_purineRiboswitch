@@ -1,0 +1,121 @@
+---
+title: "P1_P4_exchange_minimized_analysis"
+output: html_document
+date: '2023-07-08'
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(RColorBrewer)
+library(plyr)
+library(dplyr)
+library(tibble)
+library(ggsignif)
+library(plotrix)
+library(openxlsx)
+library(viridis)
+```
+
+## Creating the function to remove outliers based on Interquartile range
+```{r}
+removeOut <- function(distribution, bounds=1.5, na.rm = TRUE) {
+  #finds the 25th and 75th percentile of the distribution, excluding NAs
+  Q <- quantile(distribution, probs=c(.25,.75), na.rm=TRUE) 
+ #difference between 75th and 25th quartile=interquartile range
+ iqr <- IQR(distribution, na.rm=TRUE)
+ #upper bound of the values is 75th quartile + 1.5*(interquartile range) note: that 1.5 can be varied by changing bound
+ upperBound <- Q[2]+bounds*iqr
+ #lower bound of the values is 25th quartile - 1.5*(interquartile range)
+ lowerBound <- Q[1]-bounds*iqr
+ #take out the values that are outside of the established bounds note: that 1.5 can be varied by changing bound
+ eliminated <- c(distribution < lowerBound | distribution > upperBound)
+ #index values within the upper and lower bounds
+ noteliminatedindex <- which(distribution > lowerBound & distribution < upperBound)
+ noteliminatedvalues <- distribution[noteliminatedindex]
+ #return those values which will be included that are between the upper and lower bounds 
+ return(noteliminatedvalues)
+}
+```
+
+Read in csv.
+Formatting of csv: each column is a different colony, first row is the name of the colony, each column is then filled with the background fluorescence (PBR322) corrected fluorescence values (there should be three values per biological replicate, each of which are the technical replicates). Far right column is the condition of the growth, either - or + ligand. For this particular switch, -L=repression and +L=expression. For those colonies that have less raw data values than the controls, the empty cells are filled with an integer that can be removed easily (-2) to be turned into NA when read into R. 
+This is for repression and expression, fold induction will not be included because it will be calculated based on the included repression and expression values.
+```{r}
+#read in csv, these values will include colonies below the function cut off which has been defined here as 2.0
+P1_P4_exch_mini_all <- read.csv("~/Downloads/Expression_platform_project/expression_platform_files/library_data_files/P1_P4_exchange_minimized_data.csv", header=T)
+empty_columns <- sapply(P1_P4_exch_mini_all, function(x) all(is.na(x) | x==""))
+P1_P4_exch_mini_all <- P1_P4_exch_mini_all[,!empty_columns]
+P1_P4_exch_mini_all[P1_P4_exch_mini_all == -2] <-NA
+#MINUS 2AP DF
+P1_P4_exch_mini_minus1 <- P1_P4_exch_mini_all[P1_P4_exch_mini_all == "(-)",]
+#remove rows that were only NA and delete DF that was filled with NA only columns
+P1_P4_exch_mini_minus <- P1_P4_exch_mini_minus1[rowSums(is.na(P1_P4_exch_mini_minus1)) !=ncol(P1_P4_exch_mini_minus1),]
+rm(P1_P4_exch_mini_minus1)
+#PLUS 2AP DF
+P1_P4_exch_mini_plus1 <- P1_P4_exch_mini_all[P1_P4_exch_mini_all == "(+)",]
+P1_P4_exch_mini_plus <- P1_P4_exch_mini_plus1[rowSums(is.na(P1_P4_exch_mini_plus1)) !=ncol(P1_P4_exch_mini_plus1),]
+rm(P1_P4_exch_mini_plus1)
+```
+
+###Using function to remove outliers and create a new dataframe in wide form and long form
+```{r}
+#apply function to remove outliers for minus
+noOut_P1_P4_exch_mini_minus.list <- apply(P1_P4_exch_mini_minus[,2:ncol(P1_P4_exch_mini_minus)], 2, removeOut, na.rm=TRUE)
+noOut_P1_P4_exch_mini_minus_sideways <- plyr::ldply(noOut_P1_P4_exch_mini_minus.list, rbind)
+noOut_P1_P4_exch_mini_minus <- data.frame(t(noOut_P1_P4_exch_mini_minus_sideways[-1]))
+colnames(noOut_P1_P4_exch_mini_minus) <- noOut_P1_P4_exch_mini_minus_sideways[,1]
+#convert to long form
+P1_P4_exch_mini_minus_noOut_wideform <- cbind(P1_P4_exch_mini_minus[1:nrow(noOut_P1_P4_exch_mini_minus),1],noOut_P1_P4_exch_mini_minus[,1:ncol(noOut_P1_P4_exch_mini_minus)])
+colnames(P1_P4_exch_mini_minus_noOut_wideform)[1] <- "COLONIES"
+long_P1_P4_exch_mini_minus <- gather(P1_P4_exch_mini_minus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+#apply function to remove outliers for plus
+noOut_P1_P4_exch_mini_plus.list <- apply(P1_P4_exch_mini_plus[,2:ncol(P1_P4_exch_mini_plus)], 2, removeOut, na.rm=TRUE)
+noOut_P1_P4_exch_mini_plus_sideways <- plyr::ldply(noOut_P1_P4_exch_mini_plus.list, rbind)
+noOut_P1_P4_exch_mini_plus <- data.frame(t(noOut_P1_P4_exch_mini_plus_sideways[-1]))
+colnames(noOut_P1_P4_exch_mini_plus) <- noOut_P1_P4_exch_mini_plus_sideways[,1]
+#convert to long form
+P1_P4_exch_mini_plus_noOut_wideform <- cbind(P1_P4_exch_mini_plus[1:nrow(noOut_P1_P4_exch_mini_plus),1],noOut_P1_P4_exch_mini_plus[,1:ncol(noOut_P1_P4_exch_mini_plus)])
+colnames(P1_P4_exch_mini_plus_noOut_wideform)[1] <- "COLONIES"
+long_P1_P4_exch_mini_plus <- gather(P1_P4_exch_mini_plus_noOut_wideform, Colony_Name, Fluorescence, -COLONIES)
+```
+
+##Make DF of medians of each after removal of outliers 
+```{r}
+#median DFs
+medianP1_P4_exch_mini_minus<- as.data.frame(apply(noOut_P1_P4_exch_mini_minus, 2, median, na.rm=TRUE))
+medianP1_P4_exch_mini_plus<- as.data.frame(apply(noOut_P1_P4_exch_mini_plus, 2, median, na.rm=TRUE))
+#standard error DFs for minus and plus
+SE_P1_P4_exch_mini_minus <- std.error(noOut_P1_P4_exch_mini_minus)
+SE_P1_P4_exch_mini_plus <- std.error(noOut_P1_P4_exch_mini_plus)
+#create one data frame that has medians and standard errors
+P1_P4_exch_mini_all_summary_table <- cbind.data.frame(medianP1_P4_exch_mini_minus, SE_P1_P4_exch_mini_minus, medianP1_P4_exch_mini_plus, SE_P1_P4_exch_mini_plus)
+colnames(P1_P4_exch_mini_all_summary_table) <- c("-2AP", "-2AP_SE","+2AP", "+2AP_SE")
+#make FI
+P1_P4_exch_mini_all_summary_table$FI <- P1_P4_exch_mini_all_summary_table$`+2AP` / P1_P4_exch_mini_all_summary_table$`-2AP`
+#divide values by P4A
+P1_P4_exch_mini_all_summary_table$corr_minus_2AP <- as.numeric(P1_P4_exch_mini_all_summary_table$'-2AP')/P1_P4_exch_mini_all_summary_table[c("P4A"),c("-2AP")]
+P1_P4_exch_mini_all_summary_table$corr_plus_2AP <- as.numeric(P1_P4_exch_mini_all_summary_table$'+2AP')/P1_P4_exch_mini_all_summary_table[c("P4A"),c("+2AP")]
+P1_P4_exch_mini_all_summary_table$corr_FI <- as.numeric(P1_P4_exch_mini_all_summary_table$FI)/P1_P4_exch_mini_all_summary_table[c("P4A"),c("FI")]
+#the measurements should have 2 sig figs and the standards errors should have 1 sig fig
+two_sf_cols <- c(1,3,5,6,7,8)
+one_sf_cols <- c(2,4)
+P1_P4_exch_mini_all_summary_table[,two_sf_cols] <- signif(P1_P4_exch_mini_all_summary_table[,two_sf_cols],2)
+P1_P4_exch_mini_all_summary_table[,one_sf_cols] <- signif(P1_P4_exch_mini_all_summary_table[,one_sf_cols],1)
+#write csv
+write.csv(P1_P4_exch_mini_all_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1_P4_exchange_minimized/P1_P4_exchange_minimized_all_summary_table.csv", row.names = TRUE)
+#remove the switches below the functional cutoff of 2.0
+#find the FI median
+P1_P4_exch_mini_summary_table <- subset(P1_P4_exch_mini_all_summary_table, FI>1.9)
+#write csv
+write.csv(P1_P4_exch_mini_summary_table,"~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1_P4_exchange_minimized/P1_P4_exchange_minimized_summary_table.csv", row.names = TRUE)
+#write excel
+write.xlsx(P1_P4_exch_mini_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1_P4_exchange_minimized/P1_P4_exchange_minimized_summary_table.xlsx', rowNames = TRUE)
+write.xlsx(P1_P4_exch_mini_all_summary_table, '~/Downloads/Expression_platform_project/expression_platform_files/analysis/output_files/P1_P4_exchange_minimized/P1_P4_exchange_minimized_all_summary_table.xlsx', rowNames = TRUE)
+#remove GFP from graph
+P1_P4_exch_mini_all_summary_table_noGFP <- P1_P4_exch_mini_all_summary_table[order(row.names(P1_P4_exch_mini_all_summary_table)),]
+P1_P4_exch_mini_all_summary_table_noGFP <- P1_P4_exch_mini_all_summary_table_noGFP[-(1),]
+ggplot(P1_P4_exch_mini_all_summary_table_noGFP, aes(x=`corr_minus_2AP`, y=`corr_FI`))+ geom_point(size=2, alpha=1, show.legend = FALSE)+
+  labs(title="P1_P4_exch_mini Library Repression vs Activity", x="-2AP Fluorescence", y="Fold Induction")+
+  theme_minimal()
+```
